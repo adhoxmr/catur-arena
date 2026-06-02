@@ -300,7 +300,7 @@ app.get('/health', (_, res) => res.json({
   escrow: process.env.SPINGU_CHESS_ESCROW || 'not configured'
 }))
 
-httpServer.listen(PORT, '0.0.0.0', () => {
+httpServer.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`🚀 Catur Arena Server running on http://localhost:${PORT} (accessible on LAN at your-ip:${PORT})`)
   if (blockchainEnabled) {
     console.log('   🔗 Real Spingu Token betting is ENABLED')
