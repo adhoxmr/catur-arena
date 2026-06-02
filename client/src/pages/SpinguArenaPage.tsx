@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bot, Users, AlertTriangle, Coins } from 'lucide-react'
+import { Coins } from 'lucide-react'
 import { ethers } from 'ethers'
 import { useWalletStore } from '../store/walletStore'
 import { 
@@ -21,7 +21,7 @@ export default function SpinguArenaPage() {
   const navigate = useNavigate()
   const { 
     isConnected, address: walletAddress, spinguBalanceRaw, spinguBalance, 
-    connect, autoConnect, ensureCorrectNetwork, refreshBalance, isLoading, error 
+    connect, ensureCorrectNetwork, refreshBalance, isLoading, error 
   } = useWalletStore()
 
   const [mode, setMode] = useState<'ai' | 'multi'>('ai')
@@ -134,50 +134,41 @@ export default function SpinguArenaPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-400 px-4 py-1 rounded-full text-sm font-medium mb-4">
-          <Coins className="w-4 h-4" /> ON-CHAIN • SATUCHAIN
-        </div>
-        <h1 className="text-5xl font-bold tracking-tighter">Spingu Arena</h1>
-        <p className="text-xl text-[#94a3b8] mt-2">
-          Bertaruh dengan <span className="text-emerald-400 font-semibold">Spingu Token</span> asli di jaringan SatuChain.
-          3% fee untuk operasional game.
+      <div className="mb-5">
+        <h1 className="text-2xl font-semibold">Spingu Arena</h1>
+        <p className="text-sm text-[#71717a] mt-1">
+          Taruhan real dengan Spingu Token di SatuChain (3% fee)
         </p>
       </div>
 
       {/* Wallet Connection Section - shown only if not yet connected.
          On dApp wallet browser (Bitget etc), the useEffect will auto attempt connection. */}
       {!isConnected && (
-        <div className="card p-6 md:p-8 text-center mb-8 border border-emerald-500/40">
-          <div className="mx-auto w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-4">
-            <Coins className="w-7 h-7 md:w-8 md:h-8 text-emerald-400" />
+        <div className="card p-5 md:p-8 text-center mb-6 md:mb-8 border border-emerald-500/40">
+          <div className="mx-auto w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-3 md:mb-4">
+            <Coins className="w-6 h-6 md:w-8 md:h-8 text-emerald-400" />
           </div>
-          <h2 className="text-xl md:text-2xl font-bold mb-2">Menghubungkan ke Wallet EVM...</h2>
-          <p className="text-[#94a3b8] mb-6 max-w-md mx-auto text-sm md:text-base">
+          <h2 className="text-lg md:text-2xl font-bold mb-1.5">Hubungkan Wallet EVM</h2>
+          <p className="text-[#94a3b8] mb-4 md:mb-6 max-w-md mx-auto text-xs md:text-sm">
             {typeof window !== 'undefined' && (window.ethereum || window.bitget) ? (
-              <>Terdeteksi wallet EVM (Bitget atau lainnya) di browser ini. <strong>Sedang mencoba otomatis konek</strong>. Periksa Bitget untuk approve koneksi ke aplikasi Catur.</>
+              <>Buka di <strong>Bitget dApp browser</strong> → auto connect aktif. Ketuk tombol jika tidak muncul popup.</>
             ) : (
-              <>Buka halaman ini di dalam browser Bitget Wallet (atau wallet EVM lain) untuk koneksi otomatis.</>
+              <>Buka URL ini di dalam <strong>browser Bitget Wallet</strong> (bukan browser biasa) untuk koneksi otomatis.</>
             )}
-            <br /><br />
-            Untuk test di HP: buka URL IP komputer kamu (bukan localhost) dari dalam dApp browser wallet.
           </p>
           <button 
             onClick={connect} 
             disabled={isLoading}
-            className="btn btn-secondary px-6 py-2 text-sm mt-2 disabled:opacity-60"
+            className="btn btn-secondary px-5 py-2 text-sm disabled:opacity-60"
           >
-            {isLoading ? 'Connecting...' : (typeof window !== 'undefined' && (window.ethereum || window.bitget) ? 'Force Connect (Bitget / EVM)' : 'Connect Wallet (Bitget / EVM) & Switch to SatuChain')}
+            {isLoading ? 'Connecting...' : 'Force Connect Wallet (Bitget / EVM)'}
           </button>
-          <p className="text-xs text-[#64748b] mt-4">
-            Pastikan kamu sudah punya Spingu Token di wallet ini.
-            <br />
-            <strong>Untuk test di Bitget dApp browser (HP):</strong> Jalankan <code>npm run dev:host</code> di client, lalu buka <code>http://IP-laptop:5173/spingu</code> dari dalam browser Bitget (bukan Chrome biasa). IP laptop: jalankan <code>ipconfig</code>.
-            <br />
-            Untuk https (lebih stabil untuk wallet): install ngrok, jalankan <code>ngrok http 5173</code>, buka https URL-nya di Bitget.
+          <p className="text-[10px] md:text-xs text-[#64748b] mt-3 leading-snug">
+            Test HP: jalankan <code>npm run dev:host</code>, buka <code>http://IP:5173/spingu</code> dari dalam Bitget.<br />
+            Atau pakai ngrok untuk https.
           </p>
           {error && (
-            <div className="mt-4 text-red-400 text-sm">
+            <div className="mt-3 text-red-400 text-xs">
               Error: {error}
             </div>
           )}
@@ -188,59 +179,52 @@ export default function SpinguArenaPage() {
       {isConnected && (
         <>
           {/* Connected Wallet Info */}
-          <div className="mb-6 flex items-center justify-between card p-4">
-            <div>
-              <div className="text-xs text-[#64748b]">CONNECTED</div>
-              <div className="font-mono text-sm">{walletAddress}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-[#64748b]">SALDO SPINGU</div>
-              <div className="text-2xl font-bold text-emerald-400">{spinguBalance} <span className="text-sm font-normal text-[#94a3b8]">SPINGU</span></div>
+          <div className="mb-4 card p-3 text-sm">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="text-[10px] text-[#52525b]">WALLET</div>
+                <div className="font-mono text-xs break-all">{walletAddress}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-[#52525b]">SALDO</div>
+                <div className="font-semibold text-emerald-600">{spinguBalance} SPINGU</div>
+              </div>
             </div>
           </div>
 
-          {/* Mode Tabs */}
-          <div className="flex gap-2 mb-6">
+          {/* Mode Tabs - simple */}
+          <div className="flex gap-2 mb-4 text-sm">
             <button 
               onClick={() => setMode('ai')} 
-              className={`flex-1 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${mode === 'ai' ? 'bg-emerald-500 text-black' : 'bg-[#1c202c] hover:bg-[#2a2f3d]'}`}
+              className={`flex-1 py-2 border ${mode === 'ai' ? 'border-white text-white' : 'border-[#27272a] text-[#71717a] hover:text-[#e4e4e7]'}`}
             >
-              <Bot className="w-5 h-5" /> Lawan AI Spingu (Match Bet)
+              Lawan AI (Treasury match)
             </button>
             <button 
               onClick={() => setMode('multi')} 
-              className={`flex-1 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${mode === 'multi' ? 'bg-emerald-500 text-black' : 'bg-[#1c202c] hover:bg-[#2a2f3d]'}`}
+              className={`flex-1 py-2 border ${mode === 'multi' ? 'border-white text-white' : 'border-[#27272a] text-[#71717a] hover:text-[#e4e4e7]'}`}
             >
-              <Users className="w-5 h-5" /> Multiplayer (Taruhan Real)
+              Multiplayer (Pemain vs Pemain)
             </button>
           </div>
 
-          {/* Warning */}
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6 flex gap-3 text-sm">
-            <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <div className="font-semibold text-amber-400">Penting</div>
-              <ul className="text-[#cbd5e1] list-disc ml-4 mt-1 space-y-0.5">
-                <li>3% dari total pot akan dipotong sebagai sewa Game Spingu.</li>
-                <li>Saat lawan AI: Spingu Treasury otomatis match taruhan kamu dengan jumlah yang sama.</li>
-                <li>Pastikan kamu sudah berada di jaringan <strong>SatuChain</strong>.</li>
-                <li>Kontrak token: <span className="font-mono text-xs">{SPINGU_TOKEN_ADDRESS}</span></li>
-              </ul>
-            </div>
+          {/* Warning - simple */}
+          <div className="text-xs border-l-2 border-amber-600 pl-2 text-[#71717a] mb-4">
+            3% fee. Pastikan di jaringan SatuChain. Token: {SPINGU_TOKEN_ADDRESS}
           </div>
 
           {/* Bet Selector */}
           <div className="card p-6 mb-6">
             <div className="font-semibold mb-3">Jumlah Taruhan (per pemain)</div>
             
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-3">
               {PRESET_BETS.map((amt) => (
                 <button 
                   key={amt}
                   onClick={() => { setBetAmount(amt); setCustomAmount('') }}
-                  className={`py-3 rounded-xl border font-semibold transition ${currentBet === amt ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-[#2a2f3d] hover:bg-[#1c202c]'}`}
+                  className={`py-2 border text-sm ${currentBet === amt ? 'border-white' : 'border-[#27272a] hover:border-[#3f3f46]'}`}
                 >
-                  {amt} SPINGU
+                  {amt}
                 </button>
               ))}
             </div>
@@ -257,21 +241,21 @@ export default function SpinguArenaPage() {
             </div>
           </div>
 
-          {/* Pot Breakdown */}
-          <div className="card p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+          {/* Pot Breakdown - plain */}
+          <div className="card p-3 mb-5 text-sm">
+            <div className="grid grid-cols-3 gap-3">
               <div>
-                <div className="text-[#94a3b8]">Taruhan Kamu</div>
-                <div className="text-3xl font-bold mt-1">{currentBet} <span className="text-base font-normal">SPINGU</span></div>
+                <div className="text-[10px] text-[#52525b]">Taruhan</div>
+                <div className="font-semibold">{currentBet} SPINGU</div>
               </div>
               <div>
-                <div className="text-[#94a3b8]">Total Pot (2× taruhan)</div>
-                <div className="text-3xl font-bold mt-1">{(currentBet * 2).toLocaleString()} <span className="text-base font-normal">SPINGU</span></div>
+                <div className="text-[10px] text-[#52525b]">Total Pot</div>
+                <div className="font-semibold">{(currentBet * 2)} SPINGU</div>
               </div>
-              <div className="border-l border-[#2a2f3d] pl-6">
-                <div className="text-red-400">Fee 3% Spingu Game</div>
-                <div className="text-3xl font-bold mt-1 text-red-400">-{formatSpingu(fee)} SPINGU</div>
-                <div className="text-emerald-400 mt-2">Kamu menang → <span className="font-bold">{formatSpingu(winnerPayout)}</span> SPINGU</div>
+              <div>
+                <div className="text-[10px] text-red-500">Fee 3%</div>
+                <div className="font-semibold text-red-500">-{formatSpingu(fee)}</div>
+                <div className="text-[10px] mt-0.5 text-emerald-600">Menang: {formatSpingu(winnerPayout)}</div>
               </div>
             </div>
           </div>
@@ -282,29 +266,29 @@ export default function SpinguArenaPage() {
               <button 
                 onClick={handleStartAI}
                 disabled={!isConnected || isProcessing || currentBet < 10}
-                className="btn btn-primary w-full py-4 text-lg flex items-center justify-center gap-3 disabled:opacity-60"
+                className="btn btn-primary w-full py-2.5"
               >
-                {isApproving ? 'Approving Token...' : isProcessing ? 'Memproses Transaksi...' : 
-                  `Mulai Lawan AI Spingu • Taruh ${currentBet} SPINGU`}
+                {isApproving ? 'Approving...' : isProcessing ? 'Memproses...' : 
+                  `Lawan AI • Taruh ${currentBet} SPINGU`}
               </button>
-              <p className="text-center text-xs text-[#64748b] mt-3">Spingu Treasury akan otomatis match taruhanmu dengan jumlah yang sama.</p>
+              <div className="text-center text-xs text-[#52525b] mt-1">Treasury match • Kamu menang dapat 97%</div>
             </div>
           ) : (
             <button 
               onClick={handleStartMultiplayer}
               disabled={!isConnected || currentBet < 10}
-              className="btn btn-primary w-full py-4 text-lg"
+              className="btn btn-primary w-full py-2.5"
             >
-              Buat / Cari Room Multiplayer • Taruh {currentBet} SPINGU
+              Buat / Join Room • Taruh {currentBet} SPINGU
             </button>
           )}
         </>
       )}
 
-      {/* Treasury Info - always visible */}
-      <div className="mt-8 text-xs text-[#64748b] text-center">
-        Treasury: <span className="font-mono">{SPINGU_TREASURY_ADDRESS}</span><br />
-        Token: <span className="font-mono">{SPINGU_TOKEN_ADDRESS}</span>
+      {/* Treasury Info - always visible, compact on mobile */}
+      <div className="mt-6 md:mt-8 text-[10px] md:text-xs text-[#64748b] text-center break-all">
+        Treasury: <span className="font-mono">{SPINGU_TREASURY_ADDRESS}</span><br className="md:hidden" />
+        <span className="hidden md:inline"> • </span>Token: <span className="font-mono">{SPINGU_TOKEN_ADDRESS}</span>
       </div>
     </div>
   )

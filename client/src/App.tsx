@@ -31,10 +31,10 @@ function WalletButton() {
       <button 
         onClick={connect} 
         disabled={isLoading}
-        className="btn btn-secondary flex items-center gap-2 text-sm px-4 py-2"
+        className="btn btn-secondary flex items-center gap-2 text-sm px-3 py-1.5"
       >
         <LinkIcon className="w-4 h-4" />
-        {isLoading ? 'Menghubungkan...' : 'Connect Wallet (Bitget / EVM)'}
+        {isLoading ? 'Connecting...' : 'Connect Wallet'}
       </button>
     )
   }
@@ -43,16 +43,13 @@ function WalletButton() {
     <div className="relative">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2.5 pl-4 pr-3 py-1.5 rounded-full bg-[#1c202c] border border-[#2a2f3d] hover:border-emerald-500/50 transition text-sm"
+        className="flex items-center gap-2 pl-3 pr-2 py-1 text-sm border border-[#27272a] hover:bg-[#18181b]"
       >
         <div className="text-right">
-          <div className="font-mono text-xs text-[#94a3b8]">{shortAddr}</div>
-          <div className="text-emerald-400 text-xs font-semibold -mt-0.5">
+          <div className="font-mono text-[10px] text-[#71717a]">{shortAddr}</div>
+          <div className="text-emerald-500 text-[10px] font-medium -mt-px">
             {parseFloat(spinguBalance).toLocaleString()} SPINGU
           </div>
-        </div>
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-[#0f1117]">
-          <LinkIcon className="w-3.5 h-3.5" />
         </div>
       </button>
 
@@ -102,32 +99,29 @@ function App() {
       <nav className="sticky top-0 z-50 border-b border-[#2a2f3d] bg-[#0f1117]/95 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center">
-                <Crown className="w-6 h-6 text-[#0f1117]" />
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded bg-emerald-600 flex items-center justify-center">
+                <Crown className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <div className="font-bold text-xl tracking-tight">CATUR ARENA</div>
-                <div className="text-[10px] text-emerald-500 -mt-1 font-medium">PROFESSIONAL CHESS</div>
-              </div>
+              <div className="font-semibold text-lg tracking-tight">Catur Arena</div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2 overflow-x-auto">
             {navItems.map(({ path, label, icon: Icon }) => (
               <NavLink
                 key={path}
                 to={path}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  `flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium transition-colors whitespace-nowrap ${
                     isActive
-                      ? 'bg-emerald-500 text-[#0f1117]'
-                      : 'hover:bg-[#1c202c] text-[#94a3b8] hover:text-white'
+                      ? 'text-white border-b-2 border-emerald-600'
+                      : 'text-[#71717a] hover:text-[#e4e4e7]'
                   }`
                 }
               >
-                <Icon className="w-4 h-4" />
-                {label}
+                <Icon className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline">{label}</span>
               </NavLink>
             ))}
           </div>
@@ -140,15 +134,15 @@ function App() {
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-3 pl-4 pr-3 py-1.5 rounded-full bg-[#1c202c] border border-[#2a2f3d] hover:border-emerald-500/50 transition"
+                  className="flex items-center gap-2 pl-3 pr-2 py-1 text-sm border border-[#27272a] hover:bg-[#18181b]"
                 >
                   <div className="text-right">
-                    <div className="text-sm font-semibold">{user.username}</div>
-                    <div className="text-[11px] text-emerald-400 -mt-0.5">
-                      {user.tokens.toLocaleString()} Token
+                    <div className="text-sm font-medium">{user.username}</div>
+                    <div className="text-[10px] text-[#71717a] -mt-0.5">
+                      {user.tokens.toLocaleString()} tokens
                     </div>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-[#0f1117] font-bold text-sm">
+                  <div className="w-6 h-6 rounded bg-emerald-600 flex items-center justify-center text-white text-xs font-bold">
                     {user.username[0].toUpperCase()}
                   </div>
                 </button>
@@ -179,7 +173,7 @@ function App() {
             ) : (
               <button
                 onClick={() => navigate('/')}
-                className="btn btn-primary btn-lg text-sm"
+                className="btn btn-primary text-sm"
               >
                 <Play className="w-4 h-4" /> Mulai Bermain
               </button>
@@ -188,7 +182,7 @@ function App() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/vs-ai" element={<VsAIPage />} />
@@ -199,10 +193,8 @@ function App() {
         </Routes>
       </main>
 
-      <footer className="border-t border-[#2a2f3d] py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-6 text-center text-[#64748b] text-sm">
-          Catur Arena — Game Catur Profesional dengan AI, Multiplayer Online &amp; Taruhan Token • Dibuat dengan ❤️
-        </div>
+      <footer className="border-t border-[#27272a] py-5 mt-10 text-xs text-[#52525b] text-center">
+        Catur Arena — chess + AI + on-chain bets
       </footer>
     </div>
   )

@@ -95,13 +95,12 @@ export default function OnlineLobbyPage() {
 
   return (
     <div>
-      <div className="flex items-end justify-between mb-6">
+      <div className="flex items-end justify-between mb-4">
         <div>
-          <div className="font-bold text-3xl tracking-tight">Arena Online</div>
-          <div className="text-[#94a3b8]">Main lawan pemain sungguhan • Taruhan token • Hadiah instan</div>
+          <div className="font-semibold text-xl">Online</div>
         </div>
-        <button onClick={() => setShowCreate(true)} className="btn btn-primary flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Buat Pertandingan Baru
+        <button onClick={() => setShowCreate(true)} className="btn btn-primary text-sm">
+          <Plus className="w-4 h-4" /> Buat Room
         </button>
       </div>
 
@@ -138,7 +137,7 @@ export default function OnlineLobbyPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-8 text-sm">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs md:text-sm md:gap-8 mt-2 md:mt-0">
               <div className="flex items-center gap-1.5 text-amber-400">
                 <Coins className="w-4 h-4" /> <span className="font-semibold">{room.stake.toLocaleString()}</span>
               </div>

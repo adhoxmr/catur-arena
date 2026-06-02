@@ -7,6 +7,7 @@ Game catur profesional layaknya chess.com / lichess dengan fitur lengkap:
 - ✅ Taruhan token dengan sistem payout otomatis
 - ✅ Timer, captured pieces, move history, resign, draw offer
 - ✅ Sistem auth + dompet token persisten (SQLite)
+- ✅ **Live Chat real-time** (Firebase) dengan tag otomatis [Pemain] / [Penonton] — pakai Tabs di bawah papan (mobile friendly)
 
 ## Cara Menjalankan
 
@@ -100,14 +101,33 @@ Token Spingu: `0xb6248d93cf91b00b79fae46d3d4a8b50ac04fd3b`
 
 Chain ID SatuChain: `0x1583c088b93de3019927abdf0fba35b3946f8e94`
 
+## Live Chat (Firebase Realtime Database)
+
+Game sekarang punya **Live Chat** di halaman pertandingan (Vs AI & Multiplayer).
+
+- Letak: Di bawah papan catur pakai **Tabs** (Langkah ↔ Chat Live) — sangat ramah HP Android + dApp wallet.
+- Tag otomatis: **[PEMAIN]** jika wallet address kamu adalah salah satu pemain yang bertaruh. Sisanya **[PENONTON]**.
+- Bisa dipakai penonton (spectator) sekalipun.
+
+**Setup (hanya perlu dilakukan sekali):**
+
+- Mau cepat? → **[FIREBASE_CHEATSHEET.md](FIREBASE_CHEATSHEET.md)** (1 halaman)
+- Butuh detail lengkap? → **[FIREBASE_LIVE_CHAT_SETUP.md](FIREBASE_LIVE_CHAT_SETUP.md)**
+
+Isi 7 variabel `VITE_FIREBASE_*` di `client/.env.local`, aktifkan Realtime Database di Firebase Console, dan publish Rules sederhana.
+
+Setelah itu chat langsung jalan real-time tanpa restart backend khusus.
+
 ## Pengembangan Selanjutnya (Roadmap)
 
 - Integrasi Stockfish WASM untuk AI lebih kuat
 - Sistem rating Elo yang akurat
 - Matchmaking otomatis berdasarkan rating
-- Chat dalam game
 - Riwayat pertandingan & PGN export
+- Fitur sosial tambahan (tournament, friend list)
 - Mobile responsive yang lebih baik
+
+**Live Chat sudah selesai** menggunakan Firebase Realtime Database (lihat `FIREBASE_LIVE_CHAT_SETUP.md`).
 
 ## Deployment ke VPS / Production
 

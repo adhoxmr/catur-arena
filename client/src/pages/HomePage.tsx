@@ -37,76 +37,78 @@ export default function HomePage() {
 
   return (
     <div className="space-y-10">
-      {/* Hero */}
-      <div className="text-center pt-8 pb-6">
-        <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-1 rounded-full text-sm font-medium mb-6">
-          <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-          2.847 pemain online sekarang
-        </div>
-        
-        <h1 className="text-6xl font-bold tracking-tighter mb-4">
-          Main Catur.<br />Seperti Juara Dunia.
+      {/* Hero - straightforward */}
+      <div className="text-center pt-6 pb-4">
+        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight mb-3">
+          Catur Arena
         </h1>
-        <p className="text-xl text-[#94a3b8] max-w-md mx-auto">
-          Platform catur profesional dengan AI kelas dunia, pertandingan online, dan sistem taruhan token yang adil.
+        <p className="text-lg text-[#71717a] max-w-md mx-auto">
+          Main catur lawan AI, lawan pemain online, atau bertaruh Spingu Token.
         </p>
 
-        <div className="flex items-center justify-center gap-4 mt-8">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
           <button 
             onClick={() => navigate('/vs-ai')}
-            className="btn btn-primary btn-lg text-base px-8"
+            className="btn btn-primary w-full sm:w-auto px-6"
           >
-            <Bot className="w-5 h-5" /> Lawan AI Sekarang
+            <Bot className="w-4 h-4" /> Lawan AI
           </button>
           <button 
             onClick={() => navigate('/online')}
-            className="btn btn-secondary btn-lg text-base px-8"
+            className="btn btn-secondary w-full sm:w-auto px-6"
           >
-            <Users className="w-5 h-5" /> Main Online + Taruhan
+            <Users className="w-4 h-4" /> Main Online
+          </button>
+          <button 
+            onClick={() => navigate('/spingu')}
+            className="btn btn-secondary w-full sm:w-auto px-6"
+          >
+            Spingu Arena (Real Bet)
           </button>
         </div>
       </div>
 
-      {/* Quick Login / Guest */}
+      {/* Quick Login / Guest - simple */}
       {!isAuthenticated && (
-        <div className="max-w-md mx-auto card p-6">
-          <div className="text-center mb-5">
-            <div className="font-semibold text-lg">Mulai dalam 3 detik</div>
-            <p className="text-[#94a3b8] text-sm mt-1">Masuk sebagai tamu atau pakai akun demo</p>
-          </div>
+        <div className="max-w-sm mx-auto card p-4">
+          <div className="text-sm mb-3 text-center text-[#71717a]">Login cepat untuk coba fitur</div>
           
-          <div className="space-y-3">
+          <div className="flex flex-col gap-2">
             <button 
               onClick={() => login('demo', 'demo123')} 
-              className="w-full btn btn-secondary justify-center py-3"
+              className="w-full btn btn-secondary justify-center"
             >
-              Masuk dengan Akun Demo (12.500 token)
+              Masuk Demo (banyak token)
             </button>
             <button 
               onClick={() => {
-                const name = prompt('Masukkan username (min 3 huruf):') || ''
+                const name = prompt('Username (min 3 huruf):') || ''
                 if (name.length >= 3) login(name, 'guest123')
               }} 
-              className="w-full btn btn-primary justify-center py-3"
+              className="w-full btn btn-secondary justify-center"
             >
               Masuk sebagai Tamu
             </button>
-            <div className="text-center text-xs text-[#64748b]">Password demo: demo123</div>
           </div>
+          <div className="text-center text-[10px] text-[#52525b] mt-2">Demo: demo / demo123</div>
         </div>
       )}
 
-      {/* Features */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
-        {features.map((f, i) => (
-          <div key={i} className="card p-5">
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
-              <f.icon className="w-5 h-5 text-emerald-400" />
+      {/* Features - plain list */}
+      <div className="max-w-3xl mx-auto pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+          {features.map((f, i) => (
+            <div key={i} className="flex gap-3">
+              <div className="mt-0.5 text-emerald-600">
+                <f.icon className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="font-medium">{f.title}</div>
+                <div className="text-[#71717a] text-xs mt-0.5">{f.desc}</div>
+              </div>
             </div>
-            <div className="font-semibold text-lg mb-1.5">{f.title}</div>
-            <p className="text-[#94a3b8] text-[14px] leading-relaxed">{f.desc}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Game Modes */}

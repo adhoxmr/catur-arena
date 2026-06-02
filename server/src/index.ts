@@ -164,27 +164,56 @@ io.on('connection', (socket) => {
       }
     }
 
-    const player = { id: socket.id, username, socketId: socket.id }
+    // Store address if this is a real bet player
+    const player: any = { id: socket.id, username, socketId: socket.id }
+    if (isRealBet && playerAddress) {
+      player.address = playerAddress
+    }
+
+    // Collect addresses for chat [Pemain] tagging
+    if (!room.playerAddresses) room.playerAddresses = []
+    if (isRealBet && playerAddress && !room.playerAddresses.includes(playerAddress.toLowerCase())) {
+      room.playerAddresses.push(playerAddress.toLowerCase())
+    }
 
     // Assign color
     if (!room.players.white) {
       room.players.white = player
       socket.join(roomId)
-      socket.emit('room-joined', { color: 'w', fen: room.fen, opponent: 'Menunggu lawan...' })
+
+      socket.emit('room-joined', {
+        color: 'w',
+        fen: room.fen,
+        opponent: 'Menunggu lawan...',
+        playerAddresses: room.playerAddresses || [],
+      })
     } else if (!room.players.black) {
       room.players.black = player
       socket.join(roomId)
       room.status = 'playing'
 
-      socket.emit('room-joined', { 
-        color: 'b', 
-        fen: room.fen, 
-        opponent: room.players.white?.username 
+      socket.emit('room-joined', {
+        color: 'b',
+        fen: room.fen,
+        opponent: room.players.white?.username,
+        playerAddresses: room.playerAddresses || [],
       })
       io.to(roomId).emit('opponent-joined', username)
+
+      // Broadcast updated player list to everyone (for chat)
+      io.to(roomId).emit('players-updated', {
+        playerAddresses: room.playerAddresses || [],
+      })
     } else {
-      socket.emit('room-full')
-      return
+      // Allow spectators to join for chat + watching (no color)
+      socket.join(roomId)
+      socket.emit('room-joined', {
+        color: null, // spectator
+        fen: room.fen,
+        opponent: room.players.white?.username || 'Unknown',
+        isSpectator: true,
+        playerAddresses: room.playerAddresses || [],
+      })
     }
   })
 

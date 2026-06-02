@@ -50,6 +50,16 @@ su - "$DEPLOY_USER" -c '
   export VITE_SATUCHAIN_RPC_URL=https://rpc-mainnet.satuchain.com
   export VITE_SPINGU_CHESS_ESCROW=0x71AbEC8c9eD67B73432F2CDDe399E017E2286b43
   export VITE_SPINGU_TREASURY=0x600cFd2aCfD798B7f7bC5Fbbcc5FCe4a2A579684
+
+  # Firebase (Live Chat) - ganti dengan nilai asli kamu
+  export VITE_FIREBASE_API_KEY=your-firebase-api-key
+  export VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+  export VITE_FIREBASE_DATABASE_URL=https://your-project-default-rtdb.asia-southeast1.firebasedatabase.app
+  export VITE_FIREBASE_PROJECT_ID=your-project-id
+  export VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+  export VITE_FIREBASE_MESSAGING_SENDER_ID=1234567890
+  export VITE_FIREBASE_APP_ID=1:1234567890:web:xxxxxxxxxxxxxxxx
+
   npm run build
 '
 

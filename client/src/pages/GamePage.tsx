@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import type { Square } from 'chess.js'
 import { Chess } from 'chess.js'
@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/authStore'
 import { useWalletStore } from '../store/walletStore'
 import { getLegalMoves } from '../lib/chessAI'
 import { toast } from 'sonner'
+import GameTabs from '../components/GameTabs'
 
 let socket: Socket | null = null
 
@@ -43,17 +44,58 @@ export default function GamePage() {
   const [legalSquares, setLegalSquares] = useState<Square[]>([])
   const [connected, setConnected] = useState(false)
   const [boardSize, setBoardSize] = useState(600)
+  const boardContainerRef = useRef<HTMLDivElement>(null)
 
-  // Responsive board size for mobile / dApp browser (Android Bitget etc.)
+  // For Live Chat [Pemain] vs [Penonton] detection
+  const [playerAddresses, setPlayerAddresses] = useState<string[]>([])
+
+  // Highly responsive board sizing for mobile dApp wallets (Bitget Android webview etc.)
+  // Uses container measurement + visualViewport + orientation for reliable auto-adjust in narrow portrait webviews.
   useEffect(() => {
     const updateSize = () => {
-      const padding = 32 // container + safe area
-      const max = Math.min(window.innerWidth - padding, 600)
-      setBoardSize(Math.max(280, max)) // playable min size
+      // Prefer measuring the actual parent column width (accounts for grid, main paddings, etc.)
+      let containerW = window.innerWidth - 32
+      if (boardContainerRef.current) {
+        containerW = boardContainerRef.current.clientWidth || containerW
+      }
+
+      const vw = window.visualViewport?.width || window.innerWidth
+      const vh = window.visualViewport?.height || window.innerHeight
+
+      // On mobile portrait: board should dominate but leave space for clocks + controls + nav
+      const isMobile = vw < 640
+      const horizontalPad = isMobile ? 8 : 16
+      const reservedForUI = isMobile ? 195 : 155   // nav + header + player bars + buttons area + safe margin. Tune for no overflow
+
+      const availW = Math.max(200, containerW - horizontalPad)
+      const availH = Math.max(200, vh - reservedForUI)
+
+      let size = Math.min(availW, availH, 580)
+      size = Math.max(isMobile ? 250 : 280, Math.floor(size))
+
+      setBoardSize(size)
     }
+
     updateSize()
     window.addEventListener('resize', updateSize)
-    return () => window.removeEventListener('resize', updateSize)
+    window.addEventListener('orientationchange', updateSize)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateSize)
+    }
+
+    // Observe the actual board container for layout changes (webview chrome, keyboard, etc)
+    let ro: ResizeObserver | null = null
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(updateSize)
+      if (boardContainerRef.current) ro.observe(boardContainerRef.current)
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateSize)
+      window.removeEventListener('orientationchange', updateSize)
+      if (window.visualViewport) window.visualViewport.removeEventListener('resize', updateSize)
+      if (ro) ro.disconnect()
+    }
   }, [])
 
   // Auto connect wallet for real bet games (supports Bitget, MetaMask, etc.)
@@ -123,13 +165,31 @@ export default function GamePage() {
         const g = new Chess(data.fen)
         setGame(g)
       }
+      if (data.playerAddresses && Array.isArray(data.playerAddresses)) {
+        setPlayerAddresses(data.playerAddresses)
+      }
+      // Pastikan alamat wallet sendiri selalu masuk (untuk kasus AI atau real bet)
+      if (isRealBet && walletAddress) {
+        setPlayerAddresses(prev => Array.from(new Set([...prev, walletAddress.toLowerCase()])))
+      }
+      if (data.isSpectator) {
+        toast.info('Anda bergabung sebagai penonton. Bisa ikut chat!')
+      } else {
+        toast.success(`Anda bermain sebagai ${data.color === 'w' ? 'PUTIH' : 'HITAM'}`)
+      }
       setIsPlaying(true)
-      toast.success(`Anda bermain sebagai ${data.color === 'w' ? 'PUTIH' : 'HITAM'}`)
     })
 
     socket.on('opponent-joined', (name: string) => {
       setOpponent(name)
       toast.success(`${name} bergabung! Pertandingan dimulai.`)
+    })
+
+    // Real-bet: server mengirim update daftar alamat pemain (untuk tag chat)
+    socket.on('players-updated', (data: { playerAddresses: string[] }) => {
+      if (data.playerAddresses) {
+        setPlayerAddresses(data.playerAddresses)
+      }
     })
 
     socket.on('move-made', (data: { fen: string; san: string; captured?: string }) => {
@@ -352,110 +412,118 @@ export default function GamePage() {
   }
 
   return (
-    <div className="max-w-[1040px] mx-auto">
-      <div className="flex items-center gap-3 mb-5">
-        <button onClick={() => navigate(isOnline ? '/online' : '/vs-ai')} className="btn btn-secondary px-3 py-2">
+    <div className="max-w-[1040px] mx-auto px-0.5">
+      <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-5">
+        <button onClick={() => navigate(isOnline ? '/online' : '/vs-ai')} className="btn btn-secondary px-2 py-1.5 md:px-3 md:py-2">
           <ArrowLeft className="w-4 h-4" />
         </button>
-        <div>
-          <div className="font-bold text-2xl flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="font-bold text-lg md:text-2xl flex items-center gap-2 flex-wrap">
             {isOnline ? 'Pertandingan Online' : 'Permainan Lokal'} 
             {stake > 0 && (
-              <span className="text-emerald-400 text-xl">
+              <span className="text-emerald-400 text-base md:text-xl">
                 • {stake.toLocaleString()} {isRealBet ? 'SPINGU' : 'TOKEN'}
               </span>
             )}
             {isRealBet && (
-              <span className="text-xs px-2 py-0.5 rounded bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-bold">REAL MONEY</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-bold">REAL</span>
             )}
           </div>
-          <div className="text-sm text-[#94a3b8]">{timeControl} • Room: {roomId}</div>
+          <div className="text-xs md:text-sm text-[#94a3b8] truncate">{timeControl} • {roomId}</div>
         </div>
         {isOnline && (
-          <div className="ml-auto flex items-center gap-2 text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400">
-            <div className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-400' : 'bg-red-400'}`} /> {connected ? 'TERHUBUNG' : 'MENYAMBUNG...'}
+          <div className="ml-auto flex items-center gap-1.5 text-[10px] md:text-xs px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-emerald-500/10 text-emerald-400 whitespace-nowrap">
+            <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400' : 'bg-red-400'}`} /> {connected ? 'ONLINE' : '...'}
           </div>
         )}
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-6">
-        {/* Board */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+        {/* Board + Clocks (mobile first: board full width, clocks directly below it) */}
         <div className="lg:col-span-7">
-          <div className="board-wrapper">
-            <div style={{ width: boardSize, height: boardSize }}>
+          <div ref={boardContainerRef} className="flex justify-center">
+            <div className="board-wrapper" style={{ width: boardSize, height: boardSize, maxWidth: '100%' }}>
               <Chessboard
                 options={{
                   position: game.fen(),
-                  onPieceDrop: ({ sourceSquare, targetSquare }) => onPieceDrop(sourceSquare as any, targetSquare as any),
-                  onSquareClick: ({ square }) => onSquareClick(square as any),
+                  onPieceDrop: ({ sourceSquare, targetSquare }: any) => onPieceDrop(sourceSquare as any, targetSquare as any),
+                  onSquareClick: ({ square }: any) => onSquareClick(square as any),
                   boardOrientation: playerColor === 'w' ? 'white' : 'black',
                   chessboardRows: 8,
-                  squareStyles: legalSquares.reduce((a: any, s) => ({ ...a, [s]: { background: 'rgba(34,197,94,0.4)' } }), {}),
-                }}
+                  boardWidth: boardSize,
+                  // Classic wood board look
+                  lightSquareStyle: { backgroundColor: '#f0d9b5' },
+                  darkSquareStyle: { backgroundColor: '#b58863' },
+                  squareStyles: legalSquares.reduce((a: any, s) => ({ ...a, [s]: { background: 'rgba(34,197,94,0.55)' } }), {}),
+                } as any}
               />
             </div>
           </div>
 
-          {/* Player bars */}
-          <div className="mt-4 space-y-3">
+          {/* Player clocks - stacked on very small, or compact row. Always directly under board for mobile dApp */}
+          <div className="mt-3 max-w-[min(100%,600px)] mx-auto space-y-2">
             {[
               { label: isOnline ? opponent : 'Lawan', color: playerColor === 'w' ? 'b' : 'w', time: playerColor === 'w' ? timeLeft.black : timeLeft.white },
               { label: user?.username || 'Anda', color: playerColor, time: playerColor === 'w' ? timeLeft.white : timeLeft.black },
             ].map((p, idx) => (
-              <div key={idx} className={`card px-5 py-3 flex justify-between items-center ${game.turn() === p.color && isPlaying ? 'ring-1 ring-emerald-500' : ''}`}>
-                <div className="flex items-center gap-3">
-                  <div className="font-semibold">{p.label}</div>
-                  {p.color === playerColor && <div className="text-xs px-2 py-px bg-emerald-500 text-black rounded">ANDA</div>}
+              <div key={idx} className={`card px-2.5 py-1.5 md:px-4 md:py-2 flex justify-between items-center ${game.turn() === p.color && isPlaying ? 'ring-1 ring-emerald-500' : ''}`}>
+                <div className="flex items-center gap-2">
+                  <div className="font-semibold text-xs md:text-sm truncate max-w-[120px]">{p.label}</div>
+                  {p.color === playerColor && <div className="text-[9px] md:text-[10px] px-1 py-px bg-emerald-500 text-black rounded">ANDA</div>}
                 </div>
-                <div className={`clock ${game.turn() === p.color && isPlaying ? 'active' : ''}`}>{formatTime(p.time)}</div>
+                <div className={`clock text-base md:text-xl ${game.turn() === p.color && isPlaying ? 'active' : ''}`}>{formatTime(p.time)}</div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="card p-5">
-            <div className="uppercase text-xs tracking-widest text-[#64748b] mb-2">STATUS</div>
-            <div className="text-xl font-semibold">{isPlaying ? `Giliran ${game.turn() === 'w' ? 'Putih' : 'Hitam'}` : gameOver || 'Menunggu'}</div>
-            {isOnline && <div className="text-sm text-[#94a3b8] mt-1 flex items-center gap-2"><Users className="w-4 h-4" /> {opponent}</div>}
-          </div>
-
-          <div className="card p-4">
-            <div className="font-semibold mb-2 text-sm">Langkah</div>
-            <div className="move-list max-h-44 overflow-auto text-sm space-y-px pr-1">
-              {moveHistory.length === 0 && <div className="text-[#64748b]">Belum ada langkah</div>}
-              {moveHistory.map((m, i) => <div key={i} className="move-item">{Math.floor(i/2)+1}. {m}</div>)}
+        {/* Right column: Status + Tabs (Moves + Live Chat) — on mobile this entire block sits BELOW the board + clocks */}
+        <div className="lg:col-span-5 space-y-3 text-sm">
+          {/* Status ringkas selalu terlihat */}
+          <div className="card p-3 md:p-4">
+            <div className="uppercase text-[10px] tracking-widest text-[#64748b] mb-1">STATUS</div>
+            <div className="text-lg md:text-xl font-semibold leading-tight">
+              {isPlaying ? `Giliran ${game.turn() === 'w' ? 'Putih' : 'Hitam'}` : gameOver || 'Menunggu'}
             </div>
+            {isOnline && (
+              <div className="text-xs text-[#94a3b8] mt-0.5 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5" /> {opponent}
+              </div>
+            )}
           </div>
 
-          <div className="card p-4">
-            <div className="text-xs text-[#94a3b8] mb-1.5">BIDAK TERTANGKAP</div>
-            <div className="flex gap-8 text-xl">
-              <div>Hitam: {captured.black.join(' ') || '—'}</div>
-              <div>Putih: {captured.white.join(' ') || '—'}</div>
-            </div>
-          </div>
+          {/* === TABS: LANGKAH + CHAT (Mobile-first, di bawah papan) === */}
+          <GameTabs
+            moveHistory={moveHistory}
+            captured={captured}
+            gameStatus={isPlaying ? `Giliran ${game.turn() === 'w' ? 'Putih' : 'Hitam'}` : gameOver || undefined}
+            isPlaying={isPlaying}
+            roomId={isOnline ? roomId : null}
+            playerAddresses={playerAddresses}
+            currentUserAddress={walletAddress}
+            currentUsername={user?.username}
+          />
 
-          <div className="card p-5 space-y-2">
+          {/* Action buttons — selalu di bawah tabs */}
+          <div className="card p-3 md:p-4 space-y-2">
             {!isPlaying && !isOnline && (
-              <button onClick={startLocalGame} className="btn btn-primary w-full py-3">MULAI PERMAINAN</button>
+              <button onClick={startLocalGame} className="btn btn-primary w-full py-2.5 md:py-3">MULAI PERMAINAN</button>
             )}
             {isPlaying && (
               <>
-                <button onClick={offerDraw} className="btn btn-secondary w-full"><Handshake className="w-4 h-4" /> Tawarkan Remis</button>
-                <button onClick={resign} className="btn btn-danger w-full"><Flag className="w-4 h-4" /> Menyerah</button>
+                <button onClick={offerDraw} className="btn btn-secondary w-full py-2 md:py-2.5 text-sm"><Handshake className="w-4 h-4" /> Tawarkan Remis</button>
+                <button onClick={resign} className="btn btn-danger w-full py-2 md:py-2.5 text-sm"><Flag className="w-4 h-4" /> Menyerah</button>
               </>
             )}
             {gameOver && (
               <>
-                <div className="py-3 px-4 rounded-xl bg-emerald-500/10 text-emerald-400 font-medium text-center">{gameOver}</div>
-                <button onClick={() => navigate(isOnline ? '/online' : '/vs-ai')} className="btn btn-primary w-full">Kembali ke Lobby</button>
+                <div className="py-2.5 px-3 md:py-3 md:px-4 rounded-xl bg-emerald-500/10 text-emerald-400 font-medium text-center text-sm">{gameOver}</div>
+                <button onClick={() => navigate(isOnline ? '/online' : '/vs-ai')} className="btn btn-primary w-full py-2.5">Kembali ke Lobby</button>
               </>
             )}
           </div>
 
-          <button onClick={() => navigate('/')} className="text-xs text-[#64748b] flex items-center gap-1 mx-auto">
+          <button onClick={() => navigate('/')} className="text-xs text-[#64748b] flex items-center gap-1 mx-auto py-1">
             <ArrowLeft className="w-3 h-3" /> Kembali ke Beranda
           </button>
         </div>

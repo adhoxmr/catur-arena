@@ -65,4 +65,45 @@ sudo ufw enable
 
 Done! Open https://spingu.smkn1pulaurakyat.sch.id/spingu in Bitget dApp browser.
 
+## Cara Update (Setelah Perubahan Code di Lokal)
+
+Ini yang kamu butuhkan sekarang (bukan setup ulang):
+
+1. Dari laptop lokal, commit & push perubahan:
+   ```powershell
+   git add .
+   git commit -m "update UI + fitur terbaru"
+   git push
+   ```
+
+2. SSH ke VPS sebagai root atau su - catur
+
+3. Pull code:
+   ```bash
+   cd ~/catur-arena
+   git pull
+   ```
+
+4. Backend:
+   ```bash
+   cd server
+   npm install
+   npm run build
+   pm2 restart catur-backend
+   ```
+
+5. Frontend (WAJIB set semua env termasuk Firebase yang baru):
+   ```bash
+   cd ../client
+   npm install
+   export VITE_SERVER_URL=https://spingu.smkn1pulaurakyat.sch.id
+   export VITE_SATUCHAIN_RPC_URL=https://rpc-mainnet.satuchain.com
+   export VITE_SPINGU_CHESS_ESCROW=0x71AbEC8c9eD67B73432F2CDDe399E017E2286b43
+   export VITE_SPINGU_TREASURY=0x600cFd2aCfD798B7f7bC5Fbbcc5FCe4a2A579684
+   # Tambahkan 7 baris VITE_FIREBASE_* di sini (lihat CARA_UPDATE_VPS.md)
+   npm run build
+   ```
+
+Lihat file **CARA_UPDATE_VPS.md** untuk panduan lengkap + contoh script rebuild yang lebih praktis.
+
 See the rest of this file for full details if you want to understand every step.

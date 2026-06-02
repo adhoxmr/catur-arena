@@ -10,6 +10,10 @@ build/
 .env.local
 .env.*.local
 
+# Production build secrets (VPS only)
+catur-build.env
+catur-build.env.*
+
 # Logs
 *.log
 logs/

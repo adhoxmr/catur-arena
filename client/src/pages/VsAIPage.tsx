@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Square } from 'chess.js'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
@@ -7,7 +7,9 @@ import { useNavigate } from 'react-router-dom'
 import { getBestMove, getLegalMoves } from '../lib/chessAI'
 import type { Difficulty } from '../lib/chessAI'
 import { useAuthStore } from '../store/authStore'
+import { useWalletStore } from '../store/walletStore'
 import { toast } from 'sonner'
+import GameTabs from '../components/GameTabs'
 
 const DIFFICULTIES: { key: Difficulty; label: string; desc: string; color: string }[] = [
   { key: 'pemula', label: 'Pemula', desc: 'Depth 1 • Cocok untuk belajar', color: '#22c55e' },
@@ -36,6 +38,15 @@ export default function VsAIPage() {
   const [gameOver, setGameOver] = useState<string | null>(null)
   const [playerColor] = useState<'w' | 'b'>('w')
   const [legalSquares, setLegalSquares] = useState<Square[]>([])
+
+  // Responsive board + wallet for chat
+  const [boardSize, setBoardSize] = useState(520)
+  const boardContainerRef = useRef<HTMLDivElement>(null)
+
+  const { address: walletAddress, isConnected: isWalletConnected } = useWalletStore()
+
+  // Live chat player detection (for spingu-ai real bet: the human is the only "Pemain")
+  const [playerAddresses, setPlayerAddresses] = useState<string[]>([])
 
   const currentGameMode = GAME_MODES[selectedMode]
 
@@ -132,6 +143,58 @@ export default function VsAIPage() {
       makeAIMove()
     }
   }, [game, isPlaying, gameOver, makeAIMove])
+
+  // Responsive board sizing (mobile dApp wallets, portrait Android Bitget etc)
+  useEffect(() => {
+    const updateSize = () => {
+      let containerW = window.innerWidth - 32
+      if (boardContainerRef.current) {
+        containerW = boardContainerRef.current.clientWidth || containerW
+      }
+      const vw = window.visualViewport?.width || window.innerWidth
+      const vh = window.visualViewport?.height || window.innerHeight
+
+      const isMobile = vw < 640
+      const hPad = isMobile ? 6 : 12
+      const reserved = isMobile ? 175 : 140
+
+      const availW = Math.max(200, containerW - hPad)
+      const availH = Math.max(200, vh - reserved)
+
+      let size = Math.min(availW, availH, 540)
+      size = Math.max(isMobile ? 245 : 280, Math.floor(size))
+      setBoardSize(size)
+    }
+    updateSize()
+    window.addEventListener('resize', updateSize)
+    window.addEventListener('orientationchange', updateSize)
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', updateSize)
+
+    let ro: ResizeObserver | null = null
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(updateSize)
+      if (boardContainerRef.current) ro.observe(boardContainerRef.current)
+    }
+    return () => {
+      window.removeEventListener('resize', updateSize)
+      window.removeEventListener('orientationchange', updateSize)
+      if (window.visualViewport) window.visualViewport.removeEventListener('resize', updateSize)
+      if (ro) ro.disconnect()
+    }
+  }, [])
+
+  // For real-bet AI games (spingu-ai): the connected wallet is the Pemain
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const isReal = searchParams.get('real') === '1' || searchParams.get('real') === 'true'
+
+    if (isReal && walletAddress) {
+      setPlayerAddresses([walletAddress.toLowerCase()])
+    } else if (isWalletConnected && walletAddress) {
+      // even non-real, if wallet connected treat as player for chat
+      setPlayerAddresses([walletAddress.toLowerCase()])
+    }
+  }, [walletAddress, isWalletConnected])
 
   const handleGameEnd = (g: Chess) => {
     setIsPlaying(false)
@@ -248,7 +311,7 @@ export default function VsAIPage() {
   const currentTurn = game.turn() === 'w' ? 'Anda (Putih)' : 'AI (Hitam)'
 
   return (
-    <div className="max-w-[1080px] mx-auto">
+    <div className="max-w-[1080px] mx-auto px-0.5">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate('/')} className="btn btn-secondary px-3 py-2">
           <ArrowLeft className="w-4 h-4" />
@@ -259,23 +322,27 @@ export default function VsAIPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
         {/* LEFT: Board */}
         <div className="lg:col-span-7">
-          <div className="board-wrapper">
-            <div style={{ width: 620, height: 620 }}>
+          <div ref={boardContainerRef} className="board-wrapper flex justify-center">
+            <div style={{ width: boardSize, height: boardSize, maxWidth: '100%' }}>
               <Chessboard
                 options={{
                   position: game.fen(),
-                  onPieceDrop: ({ sourceSquare, targetSquare }) => onPieceDrop(sourceSquare as any, targetSquare as any),
-                  onSquareClick: ({ square }) => onSquareClick(square as any),
+                  onPieceDrop: ({ sourceSquare, targetSquare }: any) => onPieceDrop(sourceSquare as any, targetSquare as any),
+                  onSquareClick: ({ square }: any) => onSquareClick(square as any),
                   boardOrientation: 'white',
                   chessboardRows: 8,
+                  boardWidth: boardSize,
+                  // Classic wood board
+                  lightSquareStyle: { backgroundColor: '#f0d9b5' },
+                  darkSquareStyle: { backgroundColor: '#b58863' },
                   squareStyles: legalSquares.reduce((acc: any, sq) => {
-                    acc[sq] = { background: 'rgba(34, 197, 94, 0.35)', borderRadius: '4px' }
+                    acc[sq] = { background: 'rgba(34, 197, 94, 0.55)' }
                     return acc
                   }, {}),
-                }}
+                } as any}
               />
             </div>
           </div>
@@ -312,11 +379,11 @@ export default function VsAIPage() {
           </div>
         </div>
 
-        {/* RIGHT: Controls & Info */}
+        {/* RIGHT: Controls + Tabs (Moves + Live Chat) */}
         <div className="lg:col-span-5 space-y-4">
-          {/* Difficulty Selector */}
-          <div className="card p-5">
-            <div className="font-semibold mb-3 flex items-center gap-2">
+          {/* Difficulty Selector - tetap terlihat */}
+          <div className="card p-4 md:p-5">
+            <div className="font-semibold mb-2 flex items-center gap-2 text-sm">
               <Bot className="w-4 h-4" /> Level AI
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -325,18 +392,37 @@ export default function VsAIPage() {
                   key={d.key}
                   disabled={isPlaying}
                   onClick={() => setDifficulty(d.key)}
-                  className={`p-3 rounded-xl border text-left transition ${difficulty === d.key ? 'border-emerald-500 bg-emerald-500/5' : 'border-[#2a2f3d] hover:bg-[#1c202c]'}`}
+                  className={`p-2.5 rounded-xl border text-left transition text-xs md:text-sm ${difficulty === d.key ? 'border-emerald-500 bg-emerald-500/5' : 'border-[#2a2f3d] hover:bg-[#1c202c]'}`}
                 >
                   <div className="font-semibold" style={{ color: d.color }}>{d.label}</div>
-                  <div className="text-[11px] text-[#64748b] mt-0.5">{d.desc}</div>
+                  <div className="text-[10px] text-[#64748b] mt-0.5 hidden sm:block">{d.desc}</div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Game Mode */}
-          <div className="card p-5">
-            <div className="font-semibold mb-3">Mode Waktu</div>
+          {/* Tabs: Langkah + Chat — diletakkan di bawah papan (mobile friendly) */}
+          <GameTabs
+            moveHistory={moveHistory}
+            captured={captured}
+            gameStatus={currentTurn}
+            isPlaying={isPlaying}
+            roomId={(() => {
+              // Untuk spingu-ai real bet, pakai room dari URL
+              if (typeof window !== 'undefined') {
+                const sp = new URLSearchParams(window.location.search)
+                return sp.get('room') || null
+              }
+              return null
+            })()}
+            playerAddresses={playerAddresses}
+            currentUserAddress={walletAddress}
+            currentUsername={user?.username}
+          />
+
+          {/* Time mode tetap di bawah tabs (kompak) */}
+          <div className="card p-4 md:p-5">
+            <div className="font-semibold mb-2 text-sm">Mode Waktu</div>
             <div className="flex gap-2">
               {GAME_MODES.map((m, i) => (
                 <button
@@ -352,80 +438,49 @@ export default function VsAIPage() {
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Captured Pieces */}
-          <div className="card p-4">
-            <div className="font-semibold mb-2 text-sm">Bidak Tertangkap</div>
-            <div className="grid grid-cols-2 gap-x-6 text-sm">
-              <div>
-                <div className="text-[#94a3b8] text-xs mb-1">AI (Hitam)</div>
-                <div className="captured text-2xl">{captured.black.length > 0 ? captured.black.join(' ') : <span className="opacity-40">—</span>}</div>
-              </div>
-              <div>
-                <div className="text-[#94a3b8] text-xs mb-1">Anda (Putih)</div>
-                <div className="captured text-2xl">{captured.white.length > 0 ? captured.white.join(' ') : <span className="opacity-40">—</span>}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Move History */}
-          <div className="card p-4 flex-1 min-h-[180px]">
-            <div className="font-semibold mb-2 text-sm flex items-center justify-between">
-              Riwayat Langkah <span className="text-[#64748b] font-mono text-xs">{moveHistory.length} langkah</span>
-            </div>
-            <div className="move-list h-[160px] overflow-auto pr-1 space-y-px">
-              {moveHistory.length === 0 && <div className="text-[#64748b] text-sm py-8 text-center">Belum ada langkah</div>}
-              {moveHistory.map((move, idx) => (
-                <div key={idx} className="move-item flex gap-3 text-sm">
-                  <span className="w-7 text-[#64748b]">{Math.floor(idx / 2) + 1}.</span>
-                  <span>{move}</span>
+            {/* Status + Actions (di dalam card waktu agar rapi) */}
+            <div className="mt-4 pt-3 border-t border-[#2a2f3d]">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <div className="text-xs text-[#94a3b8]">GILIRAN</div>
+                  <div className="font-semibold text-base">{currentTurn}</div>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Status + Actions */}
-          <div className="card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-xs text-[#94a3b8]">GILIRAN</div>
-                <div className="font-semibold text-lg">{currentTurn}</div>
+                {isThinking && (
+                  <div className="badge badge-green flex items-center gap-1 text-xs">
+                    <div className="w-1.5 h-1.5 bg-emerald-400 animate-pulse rounded-full" /> AI BERPIKIR
+                  </div>
+                )}
               </div>
-              {isThinking && (
-                <div className="badge badge-green flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 bg-emerald-400 animate-pulse rounded-full" /> AI BERPIKIR...
+
+              {!isPlaying ? (
+                <div className="space-y-2">
+                  <button onClick={startGame} className="btn btn-primary w-full py-2.5">
+                    <Play className="w-4 h-4" /> MULAI PERTANDINGAN
+                  </button>
+                  {gameOver && (
+                    <button onClick={resetGame} className="btn btn-secondary w-full py-2">
+                      <RotateCcw className="w-4 h-4" /> Main Lagi
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <button onClick={handleDraw} className="btn btn-secondary flex-1 py-2 text-sm">
+                    <Handshake className="w-4 h-4" /> Tawar Remis
+                  </button>
+                  <button onClick={handleResign} className="btn btn-danger flex-1 py-2 text-sm">
+                    <Flag className="w-4 h-4" /> Menyerah
+                  </button>
+                </div>
+              )}
+
+              {gameOver && (
+                <div className="mt-3 p-2.5 bg-[#1c202c] rounded-lg text-xs border border-emerald-500/30 text-center font-medium">
+                  {gameOver}
                 </div>
               )}
             </div>
-
-            {!isPlaying ? (
-              <div className="space-y-2">
-                <button onClick={startGame} className="btn btn-primary w-full py-3 text-base">
-                  <Play className="w-5 h-5" /> MULAI PERTANDINGAN
-                </button>
-                {gameOver && (
-                  <button onClick={resetGame} className="btn btn-secondary w-full py-2.5">
-                    <RotateCcw className="w-4 h-4" /> Main Lagi
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <button onClick={handleDraw} className="btn btn-secondary flex-1">
-                  <Handshake className="w-4 h-4" /> Tawar Remis
-                </button>
-                <button onClick={handleResign} className="btn btn-danger flex-1">
-                  <Flag className="w-4 h-4" /> Menyerah
-                </button>
-              </div>
-            )}
-
-            {gameOver && (
-              <div className="mt-4 p-3 bg-[#1c202c] rounded-lg text-sm border border-emerald-500/30 text-center font-medium">
-                {gameOver}
-              </div>
-            )}
           </div>
         </div>
       </div>
