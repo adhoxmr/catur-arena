@@ -1,55 +1,40 @@
-﻿# Production Deployment Guide for Catur Arena (Tailored for your setup)
+﻿# Production Deployment Guide for Catur Arena
 
-**Your info:**
+**Your setup:**
 - Domain: spingu.smkn1pulaurakyat.sch.id
-- VPS IP: 208.76.40.208
-- Git: adhoxmr (use https://github.com/adhoxmr/catur-arena.git or the exact one you connected)
+- VPS public IP: 208.76.40.208
+- Git: connected locally to adhoxmr (use the repo URL you have, e.g. https://github.com/adhoxmr/catur-arena.git)
 
-## Prerequisites
-- VPS Ubuntu 22.04+ at 208.76.40.208
-- Domain with A record to 208.76.40.208 (HTTPS required for Bitget etc.)
-- Node 20+
-- Git
+## Quick VPS Commands (Ubuntu)
 
-## 1. VPS Initial Setup (as root)
+SSH to VPS:
+ssh root@208.76.40.208
 
-`ash
+Update & install:
 sudo apt update && sudo apt upgrade -y
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs nginx certbot python3-certbot-nginx git
 sudo npm install -g pm2
 
-# Create deploy user
+Create user:
 sudo useradd -m -s /bin/bash catur
 sudo usermod -aG sudo catur
-sudo su - catur
-`
+su - catur
 
-## 2. Clone & Prepare
-
-`ash
+Clone:
 cd ~
-git clone https://github.com/adhoxmr/catur-arena.git   # adjust if repo name different
+git clone https://github.com/adhoxmr/catur-arena.git   # change if your repo name is different
 cd catur-arena
-`
 
-## 3. Backend
-
-`ash
+Backend:
 cd server
 npm ci --production=false
 npm run build
 cp .env.example .env
 nano .env
-# Edit: 
-# - GAME_OPERATOR_PRIVATE_KEY = your real private key
-# - CORS_ORIGIN=https://spingu.smkn1pulaurakyat.sch.id
-# - other values as in your local .env
-`
+# Put your real GAME_OPERATOR_PRIVATE_KEY here + CORS_ORIGIN=https://spingu.smkn1pulaurakyat.sch.id
 
-## 4. Frontend (build with prod env)
-
-`ash
+Frontend build (prod):
 cd ../client
 npm ci
 export VITE_SERVER_URL=https://spingu.smkn1pulaurakyat.sch.id
@@ -57,42 +42,27 @@ export VITE_SATUCHAIN_RPC_URL=https://rpc-mainnet.satuchain.com
 export VITE_SPINGU_CHESS_ESCROW=0x71AbEC8c9eD67B73432F2CDDe399E017E2286b43
 export VITE_SPINGU_TREASURY=0x600cFd2aCfD798B7f7bC5Fbbcc5FCe4a2A579684
 npm run build
-`
 
-## 5. PM2 Backend
-
-`ash
+PM2:
 cd ~/catur-arena/server
 pm2 start dist/index.js --name catur-backend
 pm2 save
 pm2 startup
-`
 
-## 6. Nginx + SSL
-
-`ash
+Nginx (use the clean file we prepared):
 sudo cp ~/catur-arena/nginx-catur.conf /etc/nginx/sites-available/catur
 sudo ln -s /etc/nginx/sites-available/catur /etc/nginx/sites-enabled/ 2>/dev/null || true
 sudo nginx -t
 sudo systemctl reload nginx
 
+SSL:
 sudo certbot --nginx -d spingu.smkn1pulaurakyat.sch.id
-`
 
-## 7. Firewall
-
-`ash
+Firewall:
 sudo ufw allow 'Nginx Full'
 sudo ufw allow OpenSSH
 sudo ufw enable
-`
 
-## 8. Test
+Done! Open https://spingu.smkn1pulaurakyat.sch.id/spingu in Bitget dApp browser.
 
-- Open https://spingu.smkn1pulaurakyat.sch.id/spingu in Bitget dApp browser.
-- Auto wallet connect should work.
-- Real bets should go on-chain.
-
-See full details in this file (we cleaned the guide).
-
-For updates: git pull on VPS, rebuild, pm2 restart.
+See the rest of this file for full details if you want to understand every step.

@@ -1,0 +1,185 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset1 Segoe UI Symbol;}{\f1\fnil\fcharset0 Calibri;}{\f2\fnil Calibri;}{\f3\fnil\fcharset1 Cambria Math;}{\f4\fnil\fcharset0 Cambria Math;}{\f5\fnil\fcharset1 Segoe UI Symbol;}}
+{\colortbl ;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.22000}{\*\mmathPr\mmathFont3\mwrapIndent1440 }\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9\u9989?\f1  Bisa! Domain + IP kamu sudah saya masukkan ke panduan.\par
+Yang harus kamu lakukan sekarang (step by step)\par
+1. Push file deployment yang baru kita buat ke GitHub kamu (adhoxmr)\par
+cd catur-arena\par
+git add DEPLOY.md nginx-catur.conf server/.gitignore server/ecosystem.config.js .gitignore\par
+git commit -m "Add VPS deployment for spingu.smkn1pulaurakyat.sch.id (IP 208.76.40.208)"\par
+git push\par
+2. SSH ke VPS kamu\par
+ssh root@208.76.40.208\par
+3. Jalankan perintah cepat di VPS (saya sudah tulis versi yang sudah disesuaikan dengan domain + IP kamu di DEPLOY.md)\par
+Buka file itu:\par
+cat DEPLOY.md\par
+Ikuti bagian Quick VPS Commands (Ubuntu) yang ada di atas (sudah pakai spingu.smkn1pulaurakyat.sch.id dan user catur).\par
+Hal penting yang harus di-edit di VPS:\par
+\f2\bullet\f1  server/.env \f3\u8594?\f1  GAME_OPERATOR_PRIVATE_KEY pakai yang asli kamu (dari laptop), CORS_ORIGIN=https://spingu.smkn1pulaurakyat.sch.id\par
+\f2\bullet\f1  Client build:\par
+export VITE_SERVER_URL=https://spingu.smkn1pulaurakyat.sch.id\par
+export VITE_SATUCHAIN_RPC_URL=https://rpc-mainnet.satuchain.com\par
+export VITE_SPINGU_CHESS_ESCROW=0x71AbEC8c9eD67B73432F2CDDe399E017E2286b43\par
+export VITE_SPINGU_TREASURY=0x600cFd2aCfD798B7f7bC5Fbbcc5FCe4a2A579684\par
+npm run build\par
+4. Nginx config sudah kita siapkan di nginx-catur.conf (sudah pakai domain kamu). Tinggal copy + certbot.\par
+5. Setelah selesai + SSL aktif, buka di Bitget dApp browser:\par
+{{\field{\*\fldinst{HYPERLINK https://spingu.smkn1pulaurakyat.sch.id/spingu }}{\fldrslt{https://spingu.smkn1pulaurakyat.sch.id/spingu\ul0\cf0}}}}\f1\fs22\par
+   Auto connect + real bet seharusnya langsung jalan (HTTPS jauh lebih mulus).\par
+File yang sudah kita buat khusus untuk kamu\par
+\f2\bullet\f1  DEPLOY.md (quick command + full guide, sudah pakai domain + IP kamu)\par
+\f2\bullet\f1  nginx-catur.conf (clean, sudah domain kamu)\par
+\f2\bullet\f1  server/ecosystem.config.js (PM2)\par
+Baca DEPLOY.md di laptop kamu sekarang, lalu SSH ke VPS dan ikuti bagian "Quick VPS Commands".\par
+Kalau stuck di langkah tertentu (misal saat nano .env, nginx, atau certbot), copy errornya ke sini, saya bantu perbaiki.\par
+Mau saya buatkan juga script bash sederhana yang bisa kamu scp ke VPS untuk otomasi sebagian langkah? Atau langsung coba deploy dulu?\par
+Gas bro! Domain sekolah + IP publik sudah bagus.\par
+\par
+\f0\u9989?\f4  \f1 Ya\f4 , \f1 saya\f4  \f1 buatkan\f4  \f1 script\f4  \f1 bash\f4  \f1 sederhana\f4  + \f1 lengkap\f4  \f1 untuk\f4  \f1 kamu\f4 .\f1\par
+Script\f4  \f1 ini\f4  \f1 akan\f4  \f1 menjalankan\f4  \f1 hampir\f4  \f1 semua\f4  \f1 langkah\f4  \f1 otomatis\f4  \f1 di\f4  \f1 VPS\f4  (\f1 sebagai\f4  \f1 root\f4 ):\f1\par
+\f3\bullet\f4  \f1 Update\f4  \f1 system\par
+\f3\bullet\f4  \f1 Install\f4  \f1 Node\f4  \f1 20\f4 , \f1 Nginx\f4 , \f1 Certbot\f4 , \f1 Git\f4 , \f1 PM2\par
+\f3\bullet\f4  \f1 Buat\f4  \f1 user\f4  \f1 catur\par
+\f3\bullet\f4  \f1 Clone\f4  \f1 repo\f4  \f1 kamu\f4  (\f1 adhoxmr\f4 )\f1\par
+\f3\bullet\f4  \f1 Setup\f4  \f1 backend\f4  (\f1 build\f4  + \f1 siapkan\f4  .\f1 env\f4 )\f1\par
+\f3\bullet\f4  \f1 Build\f4  \f1 frontend\f4  \f1 dengan\f4  \f1 VITE\f4 _\f1 SERVER\f4 _\f1 URL\f4  \f1 yang\f4  \f1 sudah\f4  \f1 pas\f4  \f1 untuk\f4  \f1 domain\f4  \f1 kamu\par
+\f3\bullet\f4  \f1 Setup\f4  \f1 PM2\par
+\f3\bullet\f4  \f1 Copy\f4  \f1 nginx\f4 -\f1 catur\f4 .\f1 conf\f4  (\f1 yang\f4  \f1 sudah\f4  \f1 kita\f4  \f1 siapkan\f4  \f1 dengan\f4  \f1 domain\f4  \f1 spingu\f4 .\f1 smkn1pulaurakyat\f4 .\f1 sch\f4 .\f1 id\f4 )\f1\par
+\f3\bullet\f4  \f1 Jalankan\f4  \f1 Certbot\par
+\f3\bullet\f4  \f1 Setup\f4  \f1 firewall\par
+Setelah\f4  \f1 script\f4  \f1 selesai\f4 , \f1 kamu\f4  \f1 tinggal\f4 :\f1\par
+\f3\bullet\f4  \f1 Edit\f4  .\f1 env\f4  \f1 dengan\f4  \f1 private\f4  \f1 key\f4  \f1 asli\f4  \f1 kamu\par
+\f3\bullet\f4  (\f1 Opsional\f4 ) \f1 rebuild\f4  \f1 frontend\f4  \f1 kalau\f4  \f1 kamu\f4  \f1 edit\f4  .\f1 env\par
+\f3\bullet\f4  \f1 pm2\f4  \f1 restart\f4  \f1 catur\f4 -\f1 backend\par
+\f3\bullet\f4  \f1 Test\f4  \f1 di\f4  \f1 Bitget\f4  \f1 dApp\f4  \f1 browser\f4  \f1 pakai\f4  \f1 domain\f4  {\f1{\field{\*\fldinst{HYPERLINK https://spingu.smkn1pulaurakyat.sch.id/spingu }}{\fldrslt{https\f4 ://\f1 spingu\f4 .\f1 smkn1pulaurakyat\f4 .\f1 sch\f4 .\f1 id\f4 /\f1 spingu\ul0\cf0}}}}\f1\fs22\par
+\f3\u9472?\u9472?\u9472?\f1\par
+Cara\f4  \f1 pakai\f4  \f1 script\f4  \f1 ini\par
+1\f4 . \f1 Di\f4  \f1 laptop\f4  \f1 kamu\f4 , \f1 buat\f4  \f1 file\f4  \f1 baru\f4  \f1 bernama\f4  \f1 vps\f4 -\f1 setup\f4 .\f1 sh\f4  (\f1 pakai\f4  \f1 Notepad\f4 ++ \f1 atau\f4  \f1 VS\f4  \f1 Code\f4 , \f1 save\f4  \f1 sebagai\f4  \f1 UTF\f4 -\f1 8\f4 ).\f1\par
+2\f4 . \f1 Copy\f4  \f1 seluruh\f4  \f1 isi\f4  \f1 script\f4  \f1 di\f4  \f1 bawah\f4  \f1 ini\f4  \f1 ke\f4  \f1 file\f4  \f1 tersebut\f4 .\f1\par
+3\f4 . \f1 Kirim\f4  \f1 ke\f4  \f1 VPS\f4 :\f1\par
+scp\f4  \f1 vps\f4 -\f1 setup\f4 .\f1 sh\f4  \f1 root@208\f4 .\f1 76\f4 .\f1 40\f4 .\f1 208\f4 :~\f1\par
+4\f4 . \f1 SSH\f4  \f1 ke\f4  \f1 VPS\f4  \f1 dan\f4  \f1 jalankan\f4 :\f1\par
+ssh\f4  \f1 root@208\f4 .\f1 76\f4 .\f1 40\f4 .\f1 208\par
+chmod\f4  +\f1 x\f4  \f1 vps\f4 -\f1 setup\f4 .\f1 sh\par
+sudo\f4  ./\f1 vps\f4 -\f1 setup\f4 .\f1 sh\par
+Script\f4  \f1 akan\f4  \f1 berhenti\f4  \f1 di\f4  \f1 bagian\f4  \f1 yang\f4  \f1 butuh\f4  \f1 input\f4  \f1 manual\f4  (\f1 edit\f4  .\f1 env\f4 ).\f1\par
+\f3\u9472?\u9472?\f1\par
+Isi\f4  \f1 script\f4  \f1 vps\f4 -\f1 setup\f4 .\f1 sh\f4  (\f1 copy\f4  \f1 semua\f4  \f1 ini\f4 ):\f1\par
+\f4 #!/\f1 bin\f4 /\f1 bash\par
+set\f4  -\f1 e\par
+DOMAIN\f4 =\f1 "spingu\f4 .\f1 smkn1pulaurakyat\f4 .\f1 sch\f4 .\f1 id"\par
+REPO\f4 _\f1 URL\f4 =\f1 "https\f4 ://\f1 github\f4 .\f1 com\f4 /\f1 adhoxmr\f4 /\f1 catur\f4 -\f1 arena\f4 .\f1 git"\f4    # \f1 Ganti\f4  \f1 kalau\f4  \f1 nama\f4  \f1 repo\f4  \f1 kamu\f4  \f1 berbeda\par
+DEPLOY\f4 _\f1 USER\f4 =\f1 "catur"\par
+echo\f4  \f1 "\f4 === \f1 Catur\f4  \f1 Arena\f4  \f1 VPS\f4  \f1 Setup\f4  ===\f1 "\par
+echo\f4  \f1 "Domain\f4 : \f1 $DOMAIN"\par
+echo\f4  \f1 "Repo\f4 : \f1 $REPO\f4 _\f1 URL"\par
+echo\f4  \f1 ""\par
+if\f4  [ \f1 "$EUID"\f4  -\f1 ne\f4  \f1 0\f4  ]; \f1 then\par
+\f4   \f1 echo\f4  \f1 "Jalankan\f4  \f1 sebagai\f4  \f1 root\f4 : \f1 sudo\f4  ./\f1 vps\f4 -\f1 setup\f4 .\f1 sh"\par
+\f4   \f1 exit\f4  \f1 1\par
+fi\par
+echo\f4  \f1 "\f4 [\f1 1\f4 /\f1 8\f4 ] \f1 Update\f4  \f1 system\f4 ...\f1 "\par
+apt\f4 -\f1 get\f4  \f1 update\f4  && \f1 apt\f4 -\f1 get\f4  \f1 upgrade\f4  -\f1 y\par
+echo\f4  \f1 "\f4 [\f1 2\f4 /\f1 8\f4 ] \f1 Install\f4  \f1 Node\f4  \f1 20\f4  + \f1 nginx\f4  + \f1 certbot\f4  + \f1 git\f4  + \f1 pm2\f4 ...\f1 "\par
+curl\f4  -\f1 fsSL\f4  {\f1{\field{\*\fldinst{HYPERLINK https://deb.nodesource.com/setup_20.x }}{\fldrslt{https\f4 ://\f1 deb\f4 .\f1 nodesource\f4 .\f1 com\f4 /\f1 setup\f4 _\f1 20\f4 .\f1 x\ul0\cf0}}}}\f4\fs22  | \f1 bash\f4  -\f1\par
+apt\f4 -\f1 get\f4  \f1 install\f4  -\f1 y\f4  \f1 nodejs\f4  \f1 nginx\f4  \f1 certbot\f4  \f1 python3\f4 -\f1 certbot\f4 -\f1 nginx\f4  \f1 git\par
+npm\f4  \f1 install\f4  -\f1 g\f4  \f1 pm2\par
+echo\f4  \f1 "\f4 [\f1 3\f4 /\f1 8\f4 ] \f1 Buat\f4  \f1 user\f4  \f1 deploy\f4  \f1 '$DEPLOY\f4 _\f1 USER'\f4 ...\f1 "\par
+if\f4  ! \f1 id\f4  \f1 "$DEPLOY\f4 _\f1 USER"\f4  &>/\f1 dev\f4 /\f1 null\f4 ; \f1 then\par
+\f4   \f1 useradd\f4  -\f1 m\f4  -\f1 s\f4  /\f1 bin\f4 /\f1 bash\f4  \f1 "$DEPLOY\f4 _\f1 USER"\par
+\f4   \f1 usermod\f4  -\f1 aG\f4  \f1 sudo\f4  \f1 "$DEPLOY\f4 _\f1 USER"\par
+\f4   \f1 echo\f4  \f1 "$DEPLOY\f4 _\f1 USER\f4  \f1 ALL\f4 =(\f1 ALL\f4 ) \f1 NOPASSWD\f4 :\f1 ALL"\f4  > /\f1 etc\f4 /\f1 sudoers\f4 .\f1 d\f4 /\f1 $DEPLOY\f4 _\f1 USER\par
+fi\par
+\par
+echo\f4  \f1 "\f4 [\f1 4\f4 /\f1 8\f4 ] \f1 Clone\f4  \f1 repo\f4  \f1 sebagai\f4  \f1 $DEPLOY\f4 _\f1 USER\f4 ...\f1 "\par
+su\f4  - \f1 "$DEPLOY\f4 _\f1 USER"\f4  -\f1 c\f4  \f1 "\par
+\f4   \f1 cd\f4  ~\f1\par
+\f4   \f1 if\f4  [ ! -\f1 d\f4  \f1 catur\f4 -\f1 arena\f4  ]; \f1 then\par
+\f4     \f1 git\f4  \f1 clone\f4  \f1 $REPO\f4 _\f1 URL\f4  \f1 catur\f4 -\f1 arena\par
+\f4   \f1 else\par
+\f4     \f1 cd\f4  \f1 catur\f4 -\f1 arena\f4  && \f1 git\f4  \f1 pull\par
+\f4   \f1 fi\par
+"\par
+\par
+echo\f4  \f1 "\f4 [\f1 5\f4 /\f1 8\f4 ] \f1 Backend\f4  \f1 setup\f4 ...\f1 "\par
+su\f4  - \f1 "$DEPLOY\f4 _\f1 USER"\f4  -\f1 c\f4  \f1 '\par
+\f4   \f1 cd\f4  ~/\f1 catur\f4 -\f1 arena\f4 /\f1 server\par
+\f4   \f1 npm\f4  \f1 ci\f4  --\f1 production\f4 =\f1 false\par
+\f4   \f1 npm\f4  \f1 run\f4  \f1 build\par
+\f4   \f1 if\f4  [ ! -\f1 f\f4  .\f1 env\f4  ]; \f1 then\par
+\f4     \f1 cp\f4  .\f1 env\f4 .\f1 example\f4  .\f1 env\par
+\f4     \f1 echo\f4  \f1 ""\par
+\f4     \f1 echo\f4  \f1 "\f4 >>> \f1 PENTING\f4 : \f1 Edit\f4  \f1 sekarang\f4  ~/\f1 catur\f4 -\f1 arena\f4 /\f1 server\f4 /.\f1 env"\par
+\f4     \f1 echo\f4  \f1 "\f4     - \f1 Ganti\f4  \f1 GAME\f4 _\f1 OPERATOR\f4 _\f1 PRIVATE\f4 _\f1 KEY\f4  \f1 dengan\f4  \f1 yang\f4  \f1 asli"\par
+\f4     \f1 echo\f4  \f1 "\f4     - \f1 Pastikan\f4  \f1 CORS\f4 _\f1 ORIGIN\f4 =\f1 https\f4 ://\f1 '"$DOMAIN"'"\par
+\f4   \f1 fi\par
+'\par
+echo\f4  \f1 "\f4 [\f1 6\f4 /\f1 8\f4 ] \f1 Build\f4  \f1 frontend\f4  \f1 dengan\f4  \f1 environment\f4  \f1 production\f4 ...\f1 "\par
+su\f4  - \f1 "$DEPLOY\f4 _\f1 USER"\f4  -\f1 c\f4  \f1 '\par
+\f4   \f1 cd\f4  ~/\f1 catur\f4 -\f1 arena\f4 /\f1 client\par
+\f4   \f1 npm\f4  \f1 ci\par
+\f4   \f1 export\f4  \f1 VITE\f4 _\f1 SERVER\f4 _\f1 URL\f4 =\f1 https\f4 ://\f1 '"$DOMAIN"'\par
+\f4   \f1 export\f4  \f1 VITE\f4 _\f1 SATUCHAIN\f4 _\f1 RPC\f4 _\f1 URL\f4 =\f1 https\f4 ://\f1 rpc\f4 -\f1 mainnet\f4 .\f1 satuchain\f4 .\f1 com\par
+\f4   \f1 export\f4  \f1 VITE\f4 _\f1 SPINGU\f4 _\f1 CHESS\f4 _\f1 ESCROW\f4 =\f1 0x71AbEC8c9eD67B73432F2CDDe399E017E2286b43\par
+\f4   \f1 export\f4  \f1 VITE\f4 _\f1 SPINGU\f4 _\f1 TREASURY\f4 =\f1 0x600cFd2aCfD798B7f7bC5Fbbcc5FCe4a2A579684\par
+\f4   \f1 npm\f4  \f1 run\f4  \f1 build\par
+'\par
+\par
+echo\f4  \f1 "\f4 [\f1 7\f4 /\f1 8\f4 ] \f1 Jalankan\f4  \f1 backend\f4  \f1 dengan\f4  \f1 PM2\f4 ...\f1 "\par
+su\f4  - \f1 "$DEPLOY\f4 _\f1 USER"\f4  -\f1 c\f4  \f1 '\par
+\f4   \f1 cd\f4  ~/\f1 catur\f4 -\f1 arena\f4 /\f1 server\par
+\f4   \f1 pm2\f4  \f1 start\f4  \f1 dist\f4 /\f1 index\f4 .\f1 js\f4  --\f1 name\f4  \f1 catur\f4 -\f1 backend\f4  || \f1 true\par
+\f4   \f1 pm2\f4  \f1 save\f4  || \f1 true\par
+'\par
+\par
+echo\f4  \f1 "\f4 [\f1 8\f4 /\f1 8\f4 ] \f1 Setup\f4  \f1 Nginx\f4  + \f1 SSL\f4  + \f1 Firewall\f4 ...\f1 "\par
+if\f4  [ -\f1 f\f4  /\f1 home\f4 /\f1 $DEPLOY\f4 _\f1 USER\f4 /\f1 catur\f4 -\f1 arena\f4 /\f1 nginx\f4 -\f1 catur\f4 .\f1 conf\f4  ]; \f1 then\par
+\f4   \f1 cp\f4  /\f1 home\f4 /\f1 $DEPLOY\f4 _\f1 USER\f4 /\f1 catur\f4 -\f1 arena\f4 /\f1 nginx\f4 -\f1 catur\f4 .\f1 conf\f4  /\f1 etc\f4 /\f1 nginx\f4 /\f1 sites\f4 -\f1 available\f4 /\f1 catur\par
+else\par
+\f4   \f1 echo\f4  \f1 "WARNING\f4 : \f1 nginx\f4 -\f1 catur\f4 .\f1 conf\f4  \f1 tidak\f4  \f1 ditemukan\f4  \f1 di\f4  \f1 repo\f4 . \f1 Copy\f4  \f1 manual\f4  \f1 nanti\f4 .\f1 "\par
+fi\par
+ln\f4  -\f1 sf\f4  /\f1 etc\f4 /\f1 nginx\f4 /\f1 sites\f4 -\f1 available\f4 /\f1 catur\f4  /\f1 etc\f4 /\f1 nginx\f4 /\f1 sites\f4 -\f1 enabled\f4 /\f1\par
+nginx\f4  -\f1 t\f4  || \f1 true\par
+systemctl\f4  \f1 reload\f4  \f1 nginx\f4  || \f1 true\par
+\par
+certbot\f4  --\f1 nginx\f4  -\f1 d\f4  \f1 "$DOMAIN"\f4  --\f1 non\f4 -\f1 interactive\f4  --\f1 agree\f4 -\f1 tos\f4  -\f1 m\f4  \f1 admin@smkn1pulaurakyat\f4 .\f1 sch\f4 .\f1 id\f4  || \f1 echo\f4  \f1 "Jalankan\f4  \f1 manual\f4  \f1 kalau\f4  \f1 certbot\f4  \f1 gagal\f4 : \f1 sudo\f4  \f1 certbot\f4  --\f1 nginx\f4  -\f1 d\f4  \f1 $DOMAIN"\par
+\par
+ufw\f4  \f1 allow\f4  \f1 "Nginx\f4  \f1 Full"\f4  || \f1 true\par
+ufw\f4  \f1 allow\f4  \f1 OpenSSH\f4  || \f1 true\par
+ufw\f4  --\f1 force\f4  \f1 enable\f4  || \f1 true\par
+\par
+echo\f4  \f1 ""\par
+echo\f4  \f1 "\f4 === \f1 SELESAI\f4  ===\f1 "\par
+echo\f4  \f1 "Langkah\f4  \f1 selanjutnya\f4  (\f1 jalankan\f4  \f1 sebagai\f4  \f1 user\f4  \f1 $DEPLOY\f4 _\f1 USER\f4 ):\f1 "\par
+echo\f4  \f1 "1\f4 . \f1 Edit\f4  ~/\f1 catur\f4 -\f1 arena\f4 /\f1 server\f4 /.\f1 env\f4  \f3\u8594?\f4  \f1 masukkan\f4  \f1 private\f4  \f1 key\f4  \f1 asli\f4  \f1 kamu"\par
+echo\f4  \f1 "2\f4 . \f1 Kalau\f4  \f1 kamu\f4  \f1 edit\f4  .\f1 env\f4 , \f1 rebuild\f4  \f1 frontend\f4 :\f1 "\par
+echo\f4  \f1 "\f4    \f1 cd\f4  ~/\f1 catur\f4 -\f1 arena\f4 /\f1 client"\par
+echo\f4  \f1 "\f4    \f1 export\f4  \f1 VITE\f4 _\f1 SERVER\f4 _\f1 URL\f4 =\f1 https\f4 ://\f1 $DOMAIN"\par
+echo\f4  \f1 "\f4    \f1 export\f4  \f1 VITE\f4 _\f1 SATUCHAIN\f4 _\f1 RPC\f4 _\f1 URL\f4 =\f1 https\f4 ://\f1 rpc\f4 -\f1 mainnet\f4 .\f1 satuchain\f4 .\f1 com"\par
+echo\f4  \f1 "\f4    \f1 export\f4  \f1 VITE\f4 _\f1 SPINGU\f4 _\f1 CHESS\f4 _\f1 ESCROW\f4 =\f1 0x71AbEC8c9eD67B73432F2CDDe399E017E2286b43"\par
+echo\f4  \f1 "\f4    \f1 export\f4  \f1 VITE\f4 _\f1 SPINGU\f4 _\f1 TREASURY\f4 =\f1 0x600cFd2aCfD798B7f7bC5Fbbcc5FCe4a2A579684"\par
+echo\f4  \f1 "\f4    \f1 npm\f4  \f1 run\f4  \f1 build"\par
+echo\f4  \f1 "3\f4 . \f1 pm2\f4  \f1 restart\f4  \f1 catur\f4 -\f1 backend"\par
+echo\f4  \f1 "4\f4 . \f1 Buka\f4  {\f1{\field{\*\fldinst{HYPERLINK https://$DOMAIN/spingu }}{\fldrslt{https\f4 ://\f1 $DOMAIN\f4 /\f1 spingu\ul0\cf0}}}}\f4\fs22  \f1 di\f4  \f1 dalam\f4  \f1 Bitget\f4  \f1 dApp\f4  \f1 browser"\par
+echo\f4  \f1 ""\par
+echo\f4  \f1 "Kalau\f4  \f1 certbot\f4  \f1 gagal\f4 : \f1 sudo\f4  \f1 certbot\f4  --\f1 nginx\f4  -\f1 d\f4  \f1 $DOMAIN"\par
+echo\f4  \f1 "Cek\f4  \f1 status\f4 : \f1 su\f4  - \f1 $DEPLOY\f4 _\f1 USER\f4  -\f1 c\f4  \f1 'pm2\f4  \f1 status'"\par
+\par
+\f3\u9472?\u9472?\u9472?\f1\par
+\par
+Cara\f4  \f1 pakai\f4  \f1 script\par
+\par
+1\f4 . \f1 Simpan\f4  \f1 kode\f4  \f1 di\f4  \f1 atas\f4  \f1 sebagai\f4  \f1 file\f4  \f1 vps\f4 -\f1 setup\f4 .\f1 sh\f4  \f1 di\f4  \f1 laptop\f4  \f1 kamu\f4 .\f1\par
+2\f4 . \f1 scp\f4  \f1 vps\f4 -\f1 setup\f4 .\f1 sh\f4  \f1 root@208\f4 .\f1 76\f4 .\f1 40\f4 .\f1 208\f4 :~\f1\par
+3\f4 . \f1 ssh\f4  \f1 root@208\f4 .\f1 76\f4 .\f1 40\f4 .\f1 208\par
+4\f4 . \f1 chmod\f4  +\f1 x\f4  \f1 vps\f4 -\f1 setup\f4 .\f1 sh\f4  && \f1 sudo\f4  ./\f1 vps\f4 -\f1 setup\f4 .\f1 sh\par
+\par
+Script\f4  \f1 akan\f4  \f1 berhenti\f4  \f1 di\f4  \f1 tempat\f4  \f1 yang\f4  \f1 butuh\f4  \f1 kamu\f4  \f1 edit\f4  \f1 manual\f4  (\f1 private\f4  \f1 key\f4 ).\f1\par
+\par
+Setelah\f4  \f1 itu\f4  \f1 ikuti\f4  \f1 instruksi\f4  \f1 yang\f4  \f1 dicetak\f4  \f1 di\f4  \f1 akhir\f4  \f1 script\f4 .\f1\par
+\par
+Mau\f4  \f1 saya\f4  \f1 tambahkan\f4  \f1 juga\f4  \f1 bagian\f4  \f1 untuk\f4  \f1 auto\f4 -\f1 rebuild\f4  \f1 frontend\f4  \f1 setelah\f4  \f1 edit\f4  .\f1 env\f4 , \f1 atau\f4  \f1 script\f4  \f1 untuk\f4  \f1 update\f4  \f1 nanti\f4  (\f1 git\f4  \f1 pull\f4  + \f1 rebuild\f4 )? \f1 Bilang\f4  \f1 saja\f4 .\f1\par
+\par
+Siap\f4  \f1 deploy\f4 ! \f5\u-10179?\u-8576?\f1\lang9\par
+}
+ 

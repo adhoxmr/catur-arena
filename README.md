@@ -109,6 +109,21 @@ Chain ID SatuChain: `0x1583c088b93de3019927abdf0fba35b3946f8e94`
 - Riwayat pertandingan & PGN export
 - Mobile responsive yang lebih baik
 
+## Deployment ke VPS / Production
+
+Lihat **DEPLOY.md** untuk panduan lengkap step-by-step.
+
+Ringkasan:
+- Buat private GitHub repo, push code (pastikan .env tidak di-commit!)
+- VPS Ubuntu + Node 20 + Nginx + PM2 + Certbot (domain wajib untuk dApp wallets seperti Bitget)
+- Clone, npm ci, build client (dengan VITE_SERVER_URL=https://yourdomain.com), set server .env (real private key!)
+- PM2 untuk backend, Nginx serve static + proxy API/ws
+- SSL dengan certbot
+
+Setelah live, test di Bitget dApp browser dengan domain HTTPS.
+
+JANGAN lupa: Operator wallet harus punya cukup Spingu token di SatuChain untuk matching AI bets.
+
 ## Smart Contract Escrow (Sudah Dibuat)
 
 Lihat folder `/contracts`

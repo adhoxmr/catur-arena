@@ -15,10 +15,15 @@ const JWT_SECRET = process.env.JWT_SECRET || 'catur-arena-secret-2026'
 const app = express()
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
-  cors: { origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], methods: ['GET', 'POST'] },
+  cors: { 
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    methods: ['GET', 'POST'] 
+  },
 })
 
-app.use(cors())
+app.use(cors({ 
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : true 
+}))
 app.use(express.json())
 
 // Initialize Blockchain Service (Spingu Escrow)
