@@ -4,6 +4,126 @@
 
 Semua perintah ditulis jelas, termasuk **cara masuk ke folder mana** setiap saat.
 
+---
+
+## SITUASI KAMU SAAT INI (Dari Output yang Kamu Kirim)
+
+Kamu sudah login sebagai `catur@ubuntu`
+
+Kamu sudah di folder yang benar:
+
+`/home/catur/catur-arena/`
+
+Tapi dari `ls` yang kamu tunjukkan, file-file baru seperti `rebuild-prod.sh` dan `catur-build.env.example` **belum ada**.
+
+Artinya: Kamu **belum pull** perubahan terbaru dari GitHub.
+
+**Jadi langkah pertama yang harus kamu lakukan sekarang (di terminal VPS yang kamu buka ini):**
+
+Lanjut ke bagian di bawah "LANGKAH CEPAT JIKA KAMU SUDAH DI VPS DAN DI FOLDER INI"
+
+---
+
+## LANGKAH CEPAT JIKA KAMU SUDAH DI VPS DAN DI FOLDER INI (Dari ls yang kamu kirim)
+
+Kamu sedang di prompt:
+
+catur@ubuntu:~/catur-arena$
+
+### A. Pastikan kode terbaru dari lokal sudah di-push dulu (lakukan di laptop)
+
+Buka PowerShell baru di laptop kamu, lalu ketik satu per satu:
+
+```powershell
+cd C:\Users\bgxhg\catur-arena
+```
+
+Cek perubahan:
+
+```powershell
+git status
+```
+
+Tambah semua:
+
+```powershell
+git add .
+```
+
+Commit:
+
+```powershell
+git commit -m "add rebuild script with auto backup + detailed guide"
+```
+
+Push:
+
+```powershell
+git push
+```
+
+Tunggu sampai selesai (lihat "Everything up-to-date" atau sukses).
+
+### B. Kembali ke terminal VPS kamu (yang sekarang)
+
+Ketik perintah ini satu per satu:
+
+```bash
+git pull
+```
+
+Ini akan download file baru termasuk `rebuild-prod.sh`
+
+Cek apakah sudah masuk:
+
+```bash
+ls
+```
+
+Harus muncul `rebuild-prod.sh` dan `catur-build.env.example`
+
+### C. Setup Environment File (sekali saja)
+
+```bash
+cp catur-build.env.example ~/catur-build.env
+```
+
+Edit:
+
+```bash
+nano ~/catur-build.env
+```
+
+- Isi semua VITE_ termasuk 7 baris Firebase kamu yang asli.
+- Simpan: Ctrl + O lalu Enter, lalu Ctrl + X
+
+### D. Buat script executable dan jalankan (ini yang otomatis backup + rebuild)
+
+```bash
+chmod +x rebuild-prod.sh
+```
+
+Jalankan:
+
+```bash
+./rebuild-prod.sh
+```
+
+Script akan otomatis:
+- Backup dulu project kamu
+- git pull (lagi)
+- Build server
+- Build client (pakai env yang kamu isi)
+- Restart backend
+
+Tunggu sampai selesai. Di akhir akan kasih tau lokasi backup.
+
+---
+
+## Panduan Lengkap dari Awal (Kalau Mau Ikuti dari Laptop)
+
+( the original detailed steps continue below )
+
 ## Persiapan Awal (Hanya Sekali)
 
 Pastikan kamu sudah punya:
