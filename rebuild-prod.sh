@@ -87,7 +87,7 @@ git pull --ff-only || git pull
 echo ""
 echo "[2/6] Building Backend..."
 cd server
-npm ci --production
+npm ci
 npm run build
 
 # ============================================
@@ -107,6 +107,9 @@ else
   echo "   Buat file ~/catur-build.env dengan perintah:"
   echo "   cp catur-build.env.example ~/catur-build.env"
   echo "   nano ~/catur-build.env"
+  echo ""
+  echo "   Catatan: Nilai Firebase BISA diisi nanti. Kamu boleh jalankan rebuild dulu dengan placeholder,"
+  echo "   lalu edit ~/catur-build.env nanti dan jalankan ./rebuild-prod.sh lagi."
   echo ""
   read -p "Lanjutkan dengan env yang sudah di-export? (y/N) " -n 1 -r
   echo
