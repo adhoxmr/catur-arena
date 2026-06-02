@@ -1,0 +1,14 @@
+{
+  "name": "catur-arena",
+  "version": "1.0.0",
+  "description": "Game Catur Profesional dengan AI, Online Multiplayer & Taruhan Token",
+  "scripts": {
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "install:all": "cd client && npm install && cd ../server && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
