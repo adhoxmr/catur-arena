@@ -10,6 +10,14 @@ import { useWalletStore } from '../store/walletStore'
 import { getLegalMoves } from '../lib/chessAI'
 import { toast } from 'sonner'
 import GameTabs from '../components/GameTabs'
+import { 
+  approveSpingu, 
+  depositToEscrow, 
+  generateGameId, 
+  parseSpingu, 
+  cancelGameOnChain,
+  SPINGU_CHESS_ESCROW 
+} from '../lib/satuchain'
 
 let socket: Socket | null = null
 
@@ -23,7 +31,8 @@ export default function GamePage() {
     isConnected: isWalletConnected, 
     autoConnect, 
     connect,
-    isLoading: isWalletLoading 
+    isLoading: isWalletLoading,
+    ensureCorrectNetwork
   } = useWalletStore()
 
   const isOnline = mode === 'online' || mode === 'spingu-ai'
@@ -48,6 +57,10 @@ export default function GamePage() {
 
   // For Live Chat [Pemain] vs [Penonton] detection
   const [playerAddresses, setPlayerAddresses] = useState<string[]>([])
+
+  // Real bet deposit state
+  const [isDepositing, setIsDepositing] = useState(false)
+  const [deposited, setDeposited] = useState(false)
 
   // Highly responsive board sizing for mobile dApp wallets (Bitget Android webview etc.)
   // Uses container measurement + visualViewport + orientation for reliable auto-adjust in narrow portrait webviews.
@@ -118,6 +131,62 @@ export default function GamePage() {
       }
     }
   }, [isRealBet]);
+
+  // For real bet MULTIPLAYER only: auto deposit stake to escrow when wallet ready.
+  // (AI uses direct treasury transfer in SpinguArenaPage)
+  useEffect(() => {
+    if (
+      isRealBet &&
+      !treasuryAddressFromUrl && // only for multiplayer (not AI)
+      isWalletConnected &&
+      walletAddress &&
+      roomId &&
+      stake > 0 &&
+      !deposited &&
+      !isDepositing
+    ) {
+      const doDeposit = async () => {
+        setIsDepositing(true)
+        try {
+          const ok = await ensureCorrectNetwork()
+          if (!ok) throw new Error('Gagal memastikan jaringan SatuChain')
+
+          const { getProvider } = await import('../lib/satuchain')
+          const provider = await getProvider()
+          const signer = await provider.getSigner()
+
+          const gameId = generateGameId(roomId)
+          const betBigInt = parseSpingu(stake.toString())
+
+          toast.loading('Approving Spingu Token ke Escrow...', { id: 'real-deposit' })
+          await approveSpingu(SPINGU_CHESS_ESCROW, betBigInt, signer)
+
+          toast.loading('Mengirim taruhan ke Escrow...', { id: 'real-deposit' })
+          await depositToEscrow(gameId, signer)
+
+          toast.success('Taruhan berhasil dideposit ke escrow', { id: 'real-deposit' })
+          setDeposited(true)
+        } catch (err: any) {
+          console.error('Real bet deposit error:', err)
+          if (err.code === 'ACTION_REJECTED') {
+            toast.error('Deposit dibatalkan oleh pemain', { id: 'real-deposit' })
+          } else if (
+            err.message?.toLowerCase().includes('deposited') ||
+            err.reason?.toLowerCase().includes('deposited') ||
+            err.message?.toLowerCase().includes('already')
+          ) {
+            toast.info('Taruhan sudah dideposit sebelumnya', { id: 'real-deposit' })
+            setDeposited(true)
+          } else {
+            toast.error(err.reason || err.message || 'Gagal deposit ke escrow', { id: 'real-deposit' })
+          }
+        } finally {
+          setIsDepositing(false)
+        }
+      }
+      doDeposit()
+    }
+  }, [isRealBet, treasuryAddressFromUrl, isWalletConnected, walletAddress, roomId, stake, deposited, isDepositing])
 
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
 
@@ -400,6 +469,34 @@ export default function GamePage() {
     }
   }
 
+  // Cancel real bet if no opponent joins - returns tokens from escrow
+  const handleCancelBet = async () => {
+    if (!isRealBet || !roomId || !walletAddress) return
+    if (!window.confirm('Batalkan pertandingan? Taruhan akan dikembalikan ke wallet Anda (kurangi gas).')) return
+
+    try {
+      const { getProvider } = await import('../lib/satuchain')
+      const provider = await getProvider()
+      const signer = await provider.getSigner()
+
+      const gameId = generateGameId(roomId)
+
+      toast.loading('Membatalkan game di escrow...', { id: 'cancel-bet' })
+      await cancelGameOnChain(gameId, signer)
+
+      toast.success('Game dibatalkan. Taruhan dikembalikan ke wallet.', { id: 'cancel-bet' })
+
+      if (socket) {
+        socket.emit('cancel-room', { roomId })
+      }
+
+      navigate('/spingu')
+    } catch (err: any) {
+      console.error('Cancel bet error:', err)
+      toast.error(err.reason || err.message || 'Gagal membatalkan taruhan', { id: 'cancel-bet' })
+    }
+  }
+
   const startLocalGame = () => {
     const baseTime = parseInt(timeControl) * 60 || 600
     setTimeLeft({ white: baseTime, black: baseTime })
@@ -514,6 +611,11 @@ export default function GamePage() {
                 <button onClick={offerDraw} className="btn btn-secondary w-full py-2 md:py-2.5 text-sm"><Handshake className="w-4 h-4" /> Tawarkan Remis</button>
                 <button onClick={resign} className="btn btn-danger w-full py-2 md:py-2.5 text-sm"><Flag className="w-4 h-4" /> Menyerah</button>
               </>
+            )}
+            {isRealBet && isOnline && !isPlaying && !gameOver && (
+              <button onClick={handleCancelBet} className="btn btn-secondary w-full py-2 md:py-2.5 text-sm">
+                Batalkan Taruhan (Kembalikan ke Wallet)
+              </button>
             )}
             {gameOver && (
               <>

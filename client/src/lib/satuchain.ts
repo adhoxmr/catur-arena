@@ -263,3 +263,19 @@ export async function resolveGameOnChain(gameId: string, winnerAddress: string, 
   const tx = await escrow.resolveGame(gameId, winnerAddress)
   return await tx.wait()
 }
+
+/**
+ * Generate on-chain gameId from roomId (same as backend)
+ */
+export function generateGameId(roomId: string): string {
+  return ethers.keccak256(ethers.toUtf8Bytes(roomId))
+}
+
+/**
+ * Cancel game on-chain (refunds deposits to players)
+ */
+export async function cancelGameOnChain(gameId: string, signer: ethers.Signer) {
+  const escrow = new ethers.Contract(SPINGU_CHESS_ESCROW, ESCROW_ABI, signer)
+  const tx = await escrow.cancelGame(gameId)
+  return await tx.wait()
+}

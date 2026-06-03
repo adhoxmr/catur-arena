@@ -42,12 +42,12 @@ export default function SpinguArenaPage() {
     }
   }, []);
 
-  const betBigInt = parseSpingu(betAmount.toString())
+  const currentBet = customAmount ? parseInt(customAmount) || 0 : betAmount
+
+  const betBigInt = parseSpingu(currentBet.toString())
   const totalPot = betBigInt * 2n
   const fee = (totalPot * BigInt(GAME_FEE_PERCENT)) / 100n
   const winnerPayout = totalPot - fee
-
-  const currentBet = customAmount ? parseInt(customAmount) || 0 : betAmount
 
   const handleStartAI = async () => {
     if (!isConnected || !walletAddress) {
@@ -84,7 +84,7 @@ export default function SpinguArenaPage() {
       await refreshBalance()
 
       const roomCode = 'SPG-' + Math.floor(100000 + Math.random() * 900000)
-      navigate(`/game/spingu-ai?room=${roomCode}&stake=${betAmount}&real=1&treasury=${SPINGU_TREASURY_ADDRESS}`)
+      navigate(`/game/spingu-ai?room=${roomCode}&stake=${currentBet}&real=1&treasury=${SPINGU_TREASURY_ADDRESS}`)
     } catch (err: any) {
       console.error(err)
       // Tangkap error spesifik jika user menolak transaksi di wallet
