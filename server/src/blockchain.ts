@@ -234,3 +234,27 @@ export async function getGameFromChain(roomId: string) {
     return null
   }
 }
+
+// ============================================================
+// CANCEL GAME ON CHAIN (refunds deposits)
+// ============================================================
+export async function cancelGameOnChain(roomId: string): Promise<{ success: boolean; txHash?: string; error?: string }> {
+  if (!isBlockchainEnabled()) {
+    return { success: false, error: 'Blockchain not configured' }
+  }
+
+  try {
+    const gameId = generateGameId(roomId)
+    const tx = await escrowContract.cancelGame(gameId)
+    const receipt = await tx.wait()
+
+    console.log(`[Blockchain] Game cancelled on-chain. Tx: ${receipt.hash}`)
+    return { success: true, txHash: receipt.hash }
+  } catch (error: any) {
+    console.error('[Blockchain] cancelGameOnChain failed:', error)
+    return {
+      success: false,
+      error: error.message || 'Failed to cancel game on chain',
+    }
+  }
+}

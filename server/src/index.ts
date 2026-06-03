@@ -6,7 +6,7 @@ import Database from 'better-sqlite3'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { Room } from './types'
-import { initBlockchain, createGameOnChain, resolveGameOnChain, isBlockchainEnabled } from './blockchain'
+import { initBlockchain, createGameOnChain, resolveGameOnChain, cancelGameOnChain, isBlockchainEnabled } from './blockchain'
 import { ethers } from 'ethers'
 
 const PORT = process.env.PORT || 4000
@@ -234,6 +234,28 @@ io.on('connection', (socket) => {
 
   socket.on('offer-draw', ({ roomId }) => {
     io.to(roomId).emit('draw-offered')
+  })
+
+  socket.on('cancel-room', async ({ roomId }) => {
+    const room = rooms.get(roomId)
+    if (!room) return
+
+    if (room.isRealBet && blockchainEnabled) {
+      console.log(`[RealBet] Cancelling game on-chain: ${roomId}`)
+      const result = await cancelGameOnChain(roomId)
+
+      if (result.success) {
+        console.log(`[RealBet] Game cancelled on-chain: ${roomId}`)
+        io.to(roomId).emit('game-cancelled', { reason: 'Dibatalkan oleh pemain', txHash: result.txHash })
+      } else {
+        console.error(`[RealBet] Cancel failed: ${result.error}`)
+        io.to(roomId).emit('game-cancelled', { reason: 'Gagal membatalkan', error: result.error })
+      }
+    } else {
+      io.to(roomId).emit('game-cancelled', { reason: 'Dibatalkan' })
+    }
+
+    room.status = 'finished'
   })
 
   socket.on('game-over', async ({ roomId, reason, winnerAddress, winnerUsername }) => {

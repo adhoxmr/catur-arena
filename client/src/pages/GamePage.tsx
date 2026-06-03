@@ -15,7 +15,6 @@ import {
   depositToEscrow, 
   generateGameId, 
   parseSpingu, 
-  cancelGameOnChain,
   SPINGU_CHESS_ESCROW 
 } from '../lib/satuchain'
 
@@ -261,6 +260,23 @@ export default function GamePage() {
       }
     })
 
+    socket.on('game-cancelled', (data: any) => {
+      setIsPlaying(false)
+      const msg = data.reason || 'Game dibatalkan'
+      setGameOver(msg)
+      if (data.txHash) {
+        toast.success(`${msg} (Tx: ${data.txHash.slice(0,10)}...)`)
+      } else if (data.error) {
+        toast.error(`${msg} - ${data.error}`)
+      } else {
+        toast.info(msg)
+      }
+      // Navigate after cancel
+      setTimeout(() => {
+        navigate('/spingu')
+      }, 1500)
+    })
+
     socket.on('move-made', (data: { fen: string; san: string; captured?: string }) => {
       const g = new Chess(data.fen)
       setGame(g)
@@ -469,32 +485,19 @@ export default function GamePage() {
     }
   }
 
-  // Cancel real bet if no opponent joins - returns tokens from escrow
-  const handleCancelBet = async () => {
+  // Cancel real bet if no opponent joins - backend will call cancel on-chain using operator (refunds deposits)
+  const handleCancelBet = () => {
     if (!isRealBet || !roomId || !walletAddress) return
     if (!window.confirm('Batalkan pertandingan? Taruhan akan dikembalikan ke wallet Anda (kurangi gas).')) return
 
-    try {
-      const { getProvider } = await import('../lib/satuchain')
-      const provider = await getProvider()
-      const signer = await provider.getSigner()
+    toast.loading('Mengirim permintaan pembatalan...', { id: 'cancel-bet' })
 
-      const gameId = generateGameId(roomId)
-
-      toast.loading('Membatalkan game di escrow...', { id: 'cancel-bet' })
-      await cancelGameOnChain(gameId, signer)
-
-      toast.success('Game dibatalkan. Taruhan dikembalikan ke wallet.', { id: 'cancel-bet' })
-
-      if (socket) {
-        socket.emit('cancel-room', { roomId })
-      }
-
-      navigate('/spingu')
-    } catch (err: any) {
-      console.error('Cancel bet error:', err)
-      toast.error(err.reason || err.message || 'Gagal membatalkan taruhan', { id: 'cancel-bet' })
+    if (socket) {
+      socket.emit('cancel-room', { roomId })
     }
+
+    // The 'game-cancelled' event listener will handle the result and navigation
+    // We don't call cancel on-chain from client (only operator can)
   }
 
   const startLocalGame = () => {
