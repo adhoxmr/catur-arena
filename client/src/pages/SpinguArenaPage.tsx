@@ -6,12 +6,10 @@ import { useWalletStore } from '../store/walletStore'
 import { 
   SPINGU_TOKEN_ADDRESS, 
   SPINGU_TREASURY_ADDRESS, 
-  SPINGU_CHESS_ESCROW,
   GAME_FEE_PERCENT, 
   parseSpingu,
   formatSpingu,
-  approveSpingu,
-  getEscrowContract,
+  transferSpingu,
 } from '../lib/satuchain'
 import { toast } from 'sonner'
 
@@ -27,7 +25,6 @@ export default function SpinguArenaPage() {
   const [mode, setMode] = useState<'ai' | 'multi'>('ai')
   const [betAmount, setBetAmount] = useState(100)
   const [customAmount, setCustomAmount] = useState('')
-  const [isApproving, setIsApproving] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
 
   // Auto-connect to EVM wallet (supports Bitget, MetaMask, etc.) on page load
@@ -38,7 +35,7 @@ export default function SpinguArenaPage() {
       if (hasProvider) {
         const timer = setTimeout(() => {
           connect().catch((err) => {
-            console.log('Auto connect prompt (user may have cancelled or needs the force button):', err?.message);
+            console.log('Auto connect prompt:', err?.message);
           });
         }, 500);
         return () => clearTimeout(timer);
@@ -74,28 +71,16 @@ export default function SpinguArenaPage() {
     try {
       await ensureCorrectNetwork()
 
-      setIsApproving(true)
-      toast.loading('Approving Spingu Token...', { id: 'approve' })
+      toast.loading('Mengirim taruhan ke Treasury...', { id: 'deposit' })
 
       const { getProvider } = await import('../lib/satuchain')
       const provider = await getProvider()
       const signer = await provider.getSigner()
 
-      await approveSpingu(SPINGU_CHESS_ESCROW, betBigInt, signer)
+      // FIX: Langsung transfer taruhan ke Treasury (Bypass Escrow untuk AI)
+      await transferSpingu(SPINGU_TREASURY_ADDRESS, betBigInt, signer)
 
-      toast.success('Approval ke Escrow berhasil', { id: 'approve' })
-      setIsApproving(false)
-
-      toast.loading('Mengirim taruhan ke Smart Contract Escrow...', { id: 'deposit' })
-
-      const escrow = await getEscrowContract(signer)
-      const gameIdBytes = ethers.keccak256(ethers.toUtf8Bytes(`spingu-ai-${Date.now()}`))
-
-      const tx = await escrow.deposit(gameIdBytes)
-      await tx.wait()
-
-      toast.success('Taruhan berhasil dikunci di Escrow Contract', { id: 'deposit' })
-      toast.success('Taruhan berhasil dikunci di treasury', { id: 'transfer' })
+      toast.success('Taruhan berhasil dikirim ke Treasury', { id: 'deposit' })
 
       await refreshBalance()
 
@@ -103,10 +88,14 @@ export default function SpinguArenaPage() {
       navigate(`/game/spingu-ai?room=${roomCode}&stake=${betAmount}&real=1&treasury=${SPINGU_TREASURY_ADDRESS}`)
     } catch (err: any) {
       console.error(err)
-      toast.error(err.message || 'Transaksi gagal')
+      // Tangkap error spesifik jika user menolak transaksi di wallet
+      if (err.code === 'ACTION_REJECTED') {
+        toast.error('Transaksi dibatalkan oleh pemain', { id: 'deposit' })
+      } else {
+        toast.error(err.reason || err.message || 'Transaksi gagal', { id: 'deposit' })
+      }
     } finally {
       setIsProcessing(false)
-      setIsApproving(false)
     }
   }
 
@@ -246,8 +235,7 @@ export default function SpinguArenaPage() {
                 disabled={!isConnected || isProcessing || currentBet < 10}
                 className="btn btn-primary w-full py-2.5"
               >
-                {isApproving ? 'Approving...' : isProcessing ? 'Memproses...' : 
-                  `Lawan AI • Taruh ${currentBet} SPINGU`}
+                {isProcessing ? 'Memproses...' : `Lawan AI • Taruh ${currentBet} SPINGU`}
               </button>
               <div className="text-center text-xs text-[#52525b] mt-1">Treasury match • Kamu menang dapat 97%</div>
             </div>
