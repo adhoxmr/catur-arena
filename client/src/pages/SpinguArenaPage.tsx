@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Coins } from 'lucide-react'
-import { ethers } from 'ethers'
 import { useWalletStore } from '../store/walletStore'
 import { 
   SPINGU_TOKEN_ADDRESS, 
