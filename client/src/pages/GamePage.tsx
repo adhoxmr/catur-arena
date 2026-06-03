@@ -486,18 +486,25 @@ export default function GamePage() {
   }
 
   // Cancel real bet if no opponent joins - backend will call cancel on-chain using operator (refunds deposits)
-  const handleCancelBet = () => {
+  const handleCancelBet = async () => {
     if (!isRealBet || !roomId || !walletAddress) return
-    if (!window.confirm('Batalkan pertandingan? Taruhan akan dikembalikan ke wallet Anda (kurangi gas).')) return
+    if (!window.confirm('Batalkan pertandingan? Taruhan akan dikembalikan ke wallet Anda.')) return
 
-    toast.loading('Mengirim permintaan pembatalan...', { id: 'cancel-bet' })
+    try {
+      await ensureCorrectNetwork()
+    } catch (e) {
+      toast.error('Pastikan wallet Anda berada di jaringan SatuChain sebelum membatalkan.')
+      return
+    }
+
+    toast.loading('Mengirim permintaan pembatalan ke server...', { id: 'cancel-bet' })
 
     if (socket) {
       socket.emit('cancel-room', { roomId })
     }
 
-    // The 'game-cancelled' event listener will handle the result and navigation
-    // We don't call cancel on-chain from client (only operator can)
+    // The 'game-cancelled' event listener will handle the result, toast, and navigation.
+    // Backend operator will call cancelGame on-chain (authorized).
   }
 
   const startLocalGame = () => {

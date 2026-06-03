@@ -870,6 +870,27 @@ Ada juga "2 moderate severity vulnerabilities" dari npm audit — bisa diabaikan
 Sekarang fix tsc dulu bro, jalankan perintah di atas.
 ---
 
+### PENTING BANGET: Firebase BISA MENYUSUL NANTI (Tidak Perlu Sekarang)
+
+Bro, saya jelasin super jelas supaya kamu paham:
+
+- Firebase itu **hanya untuk fitur Live Chat** di dalam permainan (tab Chat).
+- Kalau kamu belum bikin project Firebase dan belum isi 7 nilai asli, **chat tidak akan jalan**.
+- TAPI: game utama (papan catur, tombol taruhan, menu, dll) **HARUS tetap muncul** dan tidak blank.
+- Saya sudah ubah kode (di firebase.ts, useGameChat, ChatBox) supaya:
+  - Kalau config Firebase kosong/placeholder → chat otomatis "dinonaktifkan" dengan pesan ramah.
+  - App **tidak crash**, tidak fatal error.
+- Jadi: **update dulu game-nya sekarang pakai placeholder**.
+- Nanti kapan-kapan (besok, lusa, kapan saja) kamu:
+  1. Buka Firebase Console → buat project → ambil 7 nilai config.
+  2. Edit file `~/catur-build.env` di VPS, ganti baris Firebase dengan nilai asli.
+  3. Jalankan ulang `./fix-client-for-catur.sh` atau `./update-from-git.sh`.
+  4. Chat langsung aktif.
+
+**Kesimpulan:** Jangan takut soal Firebase. Lanjut update sekarang. Firebase nanti aja. Placeholder sudah cukup supaya layar tidak blank.
+
+---
+
 Simpan file ini di laptop kamu. Ikuti nomor demi nomor.
 
 Kalau ada yang error di langkah tertentu, copy paste error + langkah berapa, saya bantu langsung.
