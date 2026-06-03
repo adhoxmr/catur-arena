@@ -27,7 +27,7 @@ export default function ChatBox({
   currentUsername,
   className = '',
 }: ChatBoxProps) {
-  const { messages, sendMessage, isConnected } = useGameChat(roomId)
+  const { messages, sendMessage, isConnected, isFirebaseEnabled } = useGameChat(roomId)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -53,7 +53,7 @@ export default function ChatBox({
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault()
-    if (!input.trim() || sending || !roomId) return
+    if (!input.trim() || sending || !roomId || !isFirebaseEnabled) return
 
     const nameToUse =
       currentUsername ||
@@ -91,7 +91,14 @@ export default function ChatBox({
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-2 space-y-1 text-sm custom-scroll"
       >
-        {messages.length === 0 && (
+        {!isFirebaseEnabled && roomId && (
+          <div className="text-center text-amber-400 text-xs py-6 px-2 border border-amber-500/30 rounded">
+            Live Chat dinonaktifkan (Firebase config belum diisi).<br />
+            Lihat <code>firebase.ts</code> atau <code>STEP_BY_STEP_VPS_UPDATE.md</code> untuk setup.
+          </div>
+        )}
+
+        {isFirebaseEnabled && messages.length === 0 && (
           <div className="text-center text-[#64748b] text-xs py-6">
             Belum ada chat. Jadilah yang pertama menyapa!
           </div>
@@ -126,14 +133,14 @@ export default function ChatBox({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={roomId ? "pesan..." : "tunggu room"}
-          disabled={!roomId || sending}
+          placeholder={!isFirebaseEnabled ? "Chat dinonaktifkan (lihat console)" : roomId ? "pesan..." : "tunggu room"}
+          disabled={!roomId || sending || !isFirebaseEnabled}
           className="input flex-1 text-sm py-1 px-2"
           maxLength={280}
         />
         <button
           type="submit"
-          disabled={!input.trim() || !roomId || sending}
+          disabled={!input.trim() || !roomId || sending || !isFirebaseEnabled}
           className="btn btn-primary px-2.5 text-xs disabled:opacity-50"
         >
           kirim

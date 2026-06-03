@@ -32,9 +32,12 @@ export function useGameChat(
 
   // Subscribe ke chat room (real-time)
   useEffect(() => {
-    if (!roomId) {
+    if (!roomId || !db) {
       setMessages([])
       setIsConnected(false)
+      if (!db && roomId) {
+        // Chat disabled due to missing Firebase config
+      }
       return
     }
 
@@ -79,12 +82,12 @@ export function useGameChat(
       }
       setIsConnected(false)
     }
-  }, [roomId, maxMessages])
+  }, [roomId, maxMessages, db])
 
   // Kirim pesan baru
   const sendMessage = useCallback(
     async (text: string, senderName: string, senderAddress?: string) => {
-      if (!roomId || !text.trim()) return false
+      if (!roomId || !db || !text.trim()) return false
 
       const trimmed = text.trim().slice(0, 280) // batas panjang pesan
       if (!trimmed) return false
@@ -106,15 +109,18 @@ export function useGameChat(
         return false
       }
     },
-    [roomId]
+    [roomId, db]
   )
 
   const clearLocal = useCallback(() => setMessages([]), [])
+
+  const isFirebaseEnabled = !!db;
 
   return {
     messages,
     sendMessage,
     isConnected,
     clearLocal,
+    isFirebaseEnabled,
   }
 }

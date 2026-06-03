@@ -42,10 +42,20 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-// Initialize hanya sekali (penting di Vite HMR)
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
+// Safe init: only initialize if we have the minimum required config for Realtime DB.
+// This prevents fatal crash if Firebase values are placeholders or not yet filled.
+const hasValidConfig = firebaseConfig.databaseURL && firebaseConfig.projectId;
 
-export const db = getDatabase(app)
+let db: any = null;
+if (hasValidConfig) {
+  // Initialize hanya sekali (penting di Vite HMR)
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  db = getDatabase(app);
+} else {
+  console.warn('[Firebase] Chat disabled: VITE_FIREBASE_* config incomplete (placeholders or missing). See firebase.ts for setup.');
+}
+
+export { db }
 
 // Re-export helper yang sering dipakai di chat
 export {
