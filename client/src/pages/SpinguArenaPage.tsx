@@ -31,18 +31,12 @@ export default function SpinguArenaPage() {
   const [isProcessing, setIsProcessing] = useState(false)
 
   // Auto-connect to EVM wallet (supports Bitget, MetaMask, etc.) on page load
-  // IMPORTANT for dApp wallet browser (Bitget etc.): When you open the local URL (or production) 
-  // inside the wallet's dApp browser, this will IMMEDIATELY detect the injected provider (Bitget's)
-  // and auto-trigger the wallet connect prompt. This is the "otomatis konek ke wallet EVM".
   useEffect(() => {
     if (!isConnected && !isLoading && typeof window !== 'undefined') {
       const hasProvider = !!(window.ethereum || window.bitget);
       
       if (hasProvider) {
-        // Small delay to ensure provider is fully ready in dApp browser context
         const timer = setTimeout(() => {
-          // Provider detected (opened inside Bitget dApp browser or with extension) -> auto prompt connect
-          // This makes it seamless: open URL in wallet -> wallet asks to connect automatically.
           connect().catch((err) => {
             console.log('Auto connect prompt (user may have cancelled or needs the force button):', err?.message);
           });
@@ -50,7 +44,7 @@ export default function SpinguArenaPage() {
         return () => clearTimeout(timer);
       }
     }
-  }, []); // Run once on mount
+  }, []);
 
   const betBigInt = parseSpingu(betAmount.toString())
   const totalPot = betBigInt * 2n
@@ -80,7 +74,6 @@ export default function SpinguArenaPage() {
     try {
       await ensureCorrectNetwork()
 
-      // 1. Approve dulu ke Treasury
       setIsApproving(true)
       toast.loading('Approving Spingu Token...', { id: 'approve' })
 
@@ -88,29 +81,24 @@ export default function SpinguArenaPage() {
       const provider = await getProvider()
       const signer = await provider.getSigner()
 
-      // Approve ke Escrow Contract (bukan treasury langsung)
       await approveSpingu(SPINGU_CHESS_ESCROW, betBigInt, signer)
 
       toast.success('Approval ke Escrow berhasil', { id: 'approve' })
       setIsApproving(false)
 
-      // Deposit ke Escrow (ini yang akan dikunci sampai game selesai)
       toast.loading('Mengirim taruhan ke Smart Contract Escrow...', { id: 'deposit' })
 
       const escrow = await getEscrowContract(signer)
-      // Note: Backend harus sudah memanggil createGame sebelumnya dengan gameId yang sama
-      const gameIdBytes = ethers.keccak256(ethers.toUtf8Bytes(`spingu-ai-${Date.now()}`)) // contoh
+      const gameIdBytes = ethers.keccak256(ethers.toUtf8Bytes(`spingu-ai-${Date.now()}`))
 
       const tx = await escrow.deposit(gameIdBytes)
       await tx.wait()
 
       toast.success('Taruhan berhasil dikunci di Escrow Contract', { id: 'deposit' })
-
       toast.success('Taruhan berhasil dikunci di treasury', { id: 'transfer' })
 
       await refreshBalance()
 
-      // Generate room ID and navigate to game with full real bet params
       const roomCode = 'SPG-' + Math.floor(100000 + Math.random() * 900000)
       navigate(`/game/spingu-ai?room=${roomCode}&stake=${betAmount}&real=1&treasury=${SPINGU_TREASURY_ADDRESS}`)
     } catch (err: any) {
@@ -127,7 +115,6 @@ export default function SpinguArenaPage() {
       toast.error('Connect wallet untuk bermain dengan taruhan Spingu asli')
       return
     }
-    // Untuk multiplayer real bet
     const roomCode = 'SPG-' + Math.floor(100000 + Math.random() * 900000)
     navigate(`/online?room=${roomCode}&stake=${currentBet}&real=1`)
   }
@@ -141,8 +128,6 @@ export default function SpinguArenaPage() {
         </p>
       </div>
 
-      {/* Wallet Connection Section - shown only if not yet connected.
-         On dApp wallet browser (Bitget etc), the useEffect will auto attempt connection. */}
       {!isConnected && (
         <div className="card p-5 md:p-8 text-center mb-6 md:mb-8 border border-emerald-500/40">
           <div className="mx-auto w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-3 md:mb-4">
@@ -175,10 +160,8 @@ export default function SpinguArenaPage() {
         </div>
       )}
 
-      {/* Show the rest of the page only when wallet is connected */}
       {isConnected && (
         <>
-          {/* Connected Wallet Info */}
           <div className="mb-4 card p-3 text-sm">
             <div className="flex justify-between items-center">
               <div>
@@ -192,7 +175,6 @@ export default function SpinguArenaPage() {
             </div>
           </div>
 
-          {/* Mode Tabs - simple */}
           <div className="flex gap-2 mb-4 text-sm">
             <button 
               onClick={() => setMode('ai')} 
@@ -208,12 +190,10 @@ export default function SpinguArenaPage() {
             </button>
           </div>
 
-          {/* Warning - simple */}
           <div className="text-xs border-l-2 border-amber-600 pl-2 text-[#71717a] mb-4">
             3% fee. Pastikan di jaringan SatuChain. Token: {SPINGU_TOKEN_ADDRESS}
           </div>
 
-          {/* Bet Selector */}
           <div className="card p-6 mb-6">
             <div className="font-semibold mb-3">Jumlah Taruhan (per pemain)</div>
             
@@ -241,7 +221,6 @@ export default function SpinguArenaPage() {
             </div>
           </div>
 
-          {/* Pot Breakdown - plain */}
           <div className="card p-3 mb-5 text-sm">
             <div className="grid grid-cols-3 gap-3">
               <div>
@@ -260,7 +239,6 @@ export default function SpinguArenaPage() {
             </div>
           </div>
 
-          {/* Action Buttons */}
           {mode === 'ai' ? (
             <div>
               <button 
@@ -285,7 +263,6 @@ export default function SpinguArenaPage() {
         </>
       )}
 
-      {/* Treasury Info - always visible, compact on mobile */}
       <div className="mt-6 md:mt-8 text-[10px] md:text-xs text-[#64748b] text-center break-all">
         Treasury: <span className="font-mono">{SPINGU_TREASURY_ADDRESS}</span><br className="md:hidden" />
         <span className="hidden md:inline"> • </span>Token: <span className="font-mono">{SPINGU_TOKEN_ADDRESS}</span>

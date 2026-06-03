@@ -70,6 +70,9 @@ echo "5. Sourcing env..."
 # shellcheck disable=SC1090
 source "$ENV_FILE"
 
+# Force base path for /catur subdir deployment
+export VITE_BASE_PATH=/catur/
+
 echo "6. Building Backend..."
 cd server
 npm ci
@@ -78,14 +81,19 @@ npm run build
 echo "7. Building Frontend..."
 cd ../client
 npm ci
+rm -rf dist
 npm run build
+
+echo "   -> Verifying base paths in built index.html..."
+grep -o 'src="[^"]*"' dist/index.html | head -3 || echo "   (no src found, check build)"
 
 echo "8. Restarting PM2..."
 cd ../server
 pm2 restart catur-backend || pm2 start dist/index.js --name catur-backend
 
-echo "9. Reloading Nginx (for safety)..."
-sudo systemctl reload nginx || true
+echo "9. Updating Nginx config for /catur subpath and reloading..."
+sudo cp nginx-catur.conf /etc/nginx/sites-available/catur || echo "Warning: could not cp nginx config (check sudo)"
+sudo nginx -t && sudo systemctl reload nginx || true
 
 echo "=== DONE ==="
 echo "Test at: https://spingu.smkn1pulaurakyat.sch.id/catur"

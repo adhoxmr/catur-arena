@@ -877,3 +877,32 @@ Kalau ada yang error di langkah tertentu, copy paste error + langkah berapa, say
 Sekarang coba ikuti dari LANGKAH 1. Semoga sukses! 
 
 Kalau sudah selesai update, kasih tau hasilnya.
+
+**Jika masih blank screen di https://spingu.smkn1pulaurakyat.sch.id/catur setelah semua update:**
+
+Kemungkinan besar build belum pakai base /catur/ dengan benar (assets 404).
+
+Jalankan quick fix:
+
+```bash
+cd ~/catur-arena
+chmod +x fix-client-for-catur.sh
+./fix-client-for-catur.sh
+sudo systemctl reload nginx
+```
+
+Lalu hard refresh browser (Ctrl+Shift+R) di URL tersebut.
+
+The fix script forces clean dist build with VITE_BASE_PATH=/catur/ and shows the script src paths.
+
+If after that still blank, buka DevTools (F12) > Console and paste any error here.
+
+Atau cek built paths:
+
+```bash
+grep -o 'src="[^"]*"' ~/catur-arena/client/dist/index.html | head -3
+```
+
+Harusnya ada /catur/assets/...
+
+Kalau masih /assets/ , env tidak terbaca saat build.
