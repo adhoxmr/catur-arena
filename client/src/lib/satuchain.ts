@@ -3,20 +3,20 @@ import { ethers } from 'ethers'
 // ============================================================
 // SPINGU TOKEN + SATUCHAIN CONFIG
 // ============================================================
-// TODO: Isi nilai yang benar dari tim SatuChain
 
 export const SPINGU_TOKEN_ADDRESS = '0xb6248d93cf91b00b79fae46d3d4a8b50ac04fd3b'
 
-// Chain ID SatuChain (dari user)
-export const SATUCHAIN_CHAIN_ID_HEX = '0x1583c088b93de3019927abdf0fba35b3946f8e94'
+// Chain ID SatuChain yang benar
+export const SATUCHAIN_CHAIN_ID_HEX = '0x9a4bc9'
 export const SATUCHAIN_CHAIN_ID = BigInt(SATUCHAIN_CHAIN_ID_HEX)
 
-// GANTI DENGAN RPC YANG BENAR
+// RPC SatuChain
 export const SATUCHAIN_RPC_URL = import.meta.env.VITE_SATUCHAIN_RPC_URL || 
-  'https://rpc.satuchain.xyz' // <--- GANTI INI
+  'https://rpc-mainnet.satuchain.com'
 
+// Explorer SatuChain
 export const SATUCHAIN_EXPLORER = import.meta.env.VITE_SATUCHAIN_EXPLORER || 
-  'https://explorer.satuchain.xyz' // optional
+  'https://stuscan.com'
 
 // Alamat treasury / hot wallet yang akan:
 // - Menerima 3% fee
@@ -25,10 +25,10 @@ export const SATUCHAIN_EXPLORER = import.meta.env.VITE_SATUCHAIN_EXPLORER ||
 export const SPINGU_TREASURY_ADDRESS = import.meta.env.VITE_SPINGU_TREASURY || 
   '0x0000000000000000000000000000000000000000' // <--- WAJIB GANTI
 
-// Nama & symbol native token SatuChain (biasanya SPINGU atau SATU)
+// Nama & symbol native token SatuChain
 export const NATIVE_CURRENCY = {
-  name: 'Spingu',
-  symbol: 'SPINGU',
+  name: 'SatuChain',
+  symbol: 'STU',
   decimals: 18,
 }
 
@@ -263,4 +263,3 @@ export async function resolveGameOnChain(gameId: string, winnerAddress: string, 
   const tx = await escrow.resolveGame(gameId, winnerAddress)
   return await tx.wait()
 }
-
